@@ -12,7 +12,7 @@ Resources:
   MyGoAPIFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://jpshadowapps-lambdas/misc-functions-http-go1/11a1d0f7a803e54ab2b70cc7c5e257bc
+      CodeUri: s3://jpshadowapps-lambdas/misc-functions-http-go1/de9a4038adc7594c24bb305346380077
       Handler: hello-world
       Runtime: go1.x
       Tracing: Active

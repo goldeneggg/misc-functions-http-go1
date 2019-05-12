@@ -12,6 +12,7 @@ type Params struct {
 	PathParams  map[string]string
 	Header      map[string]string
 	Body        string
+	Stage       string
 }
 
 type Result struct {
