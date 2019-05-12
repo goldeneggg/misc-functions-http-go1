@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'misc-functions-http-go1
+
+  Sample SAM Template for misc-functions-http-go1
+
+  '
+Globals:
+  Function:
+    Timeout: 10
+Resources:
+  MyGoAPIFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://jpshadowapps-lambdas/misc-functions-http-go1/11a1d0f7a803e54ab2b70cc7c5e257bc
+      Handler: hello-world
+      Runtime: go1.x
+      Tracing: Active
+      Events:
+        GetHello:
+          Type: Api
+          Properties:
+            Path: /hello
+            Method: GET
+      Environment:
+        Variables:
+          PARAM1: VALUE
+Outputs:
+  MyGoAPI:
+    Description: API Gateway endpoint URL for Prod environment for First Function
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/
+  MyGoAPIFunction:
+    Description: First Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - MyGoAPIFunction
+      - Arn
+  MyGoAPIFunctionIamRole:
+    Description: Implicit IAM Role created for Hello World function
+    Value:
+      Fn::GetAtt:
+      - MyGoAPIFunctionRole
+      - Arn

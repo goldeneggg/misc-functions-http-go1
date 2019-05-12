@@ -1,0 +1,25 @@
+language: go
+
+go:
+  - 1.12.x
+  - master
+
+matrix:
+  allow_failures:
+    - go: master
+
+sudo: false
+
+env:
+  - GO111MODULE=on
+
+install:
+  - echo $TRAVIS_GO_VERSION
+  - make mod-dl
+
+script:
+  - make ci
+
+notifications:
+  email:
+    on_success: never

@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  misc-functions-http-go1
+  
+  Sample SAM Template for misc-functions-http-go1
+
+# See: https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html
+# Parameters:
+#   KeyIdParameter:
+#     Type: String
+
+# See: https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/mappings-section-structure.html
+# Mappings:
+#   HogeMap:
+#     hoge1:
+#       hoge1key1: "hoge1value1"
+
+# See: https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/pseudo-parameter-reference.html
+# 擬似パラメータはAWS CloudFormation によって事前定義されたパラメータ、Sub関数やRef関数で参照可能
+# - AWS::Region - us-west-2 など、包括的なリソースが作成されている AWS リージョンを表す文字列を返します。
+# - etc...
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 10
+#     Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+#       Variables:
+#         HOGE_TOKEN: "HUGA"
+#         KMS_REGION: ap-northeast-1
+
+Resources:
+  # TODO: aws-cli, aws-sam-cliの実行IAMユーザ（.aws/credentials設定）に依存させたくなければ、
+  # Roleの定義をtemplate.yamlで行うという策もあるが、メリデメを理解してから対応する
+  #
+  # MyGoAPIFunctionRole:
+  #   Type: "AWS::IAM::Role"
+  #   Properties:
+  #    AssumeRolePolicyDocument:
+  #       Statement:
+  #       - Action: ['sts:AssumeRole']
+  #         Effect: Allow
+  #         Principal:
+  #           Service: ['lambda.amazonaws.com']
+  #       Version: '2012-10-17'
+  #    Path: /
+  #    Policies:
+  MyGoAPIFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: hello-world/
+      Handler: hello-world
+      Runtime: go1.x
+      # Policies:
+      #   - KMSDecryptPolicy:
+      #       KeyId: !Ref KeyIdParameter
+      Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
+      Events:
+        GetHello:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /hello
+            Method: GET
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          PARAM1: VALUE
+
+# See: https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  MyGoAPI:
+    Description: "API Gateway endpoint URL for Prod environment for First Function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  MyGoAPIFunction:
+    Description: "First Lambda Function ARN"
+    Value: !GetAtt MyGoAPIFunction.Arn
+  MyGoAPIFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt MyGoAPIFunctionRole.Arn

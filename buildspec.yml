@@ -1,0 +1,31 @@
+version: 0.2
+env:
+  variables:
+    S3_BUCKET: "jpshadowapps-lambdas"
+    S3_DIR: "misc-functions-http-go1"
+    PACKAGE: "github.com/goldeneggg/misc-functions-http-go1"
+    ZIP_NAME: "hello-world.zip"
+
+phases:
+  install:
+    commands:
+      - pwd
+      - mkdir -p "/go/src/$(dirname ${PACKAGE})"
+      - ln -s "${CODEBUILD_SRC_DIR}" "/go/src/${PACKAGE}"
+
+  pre_build:
+    commands:
+      - pwd
+      - cd "/go/src/${PACKAGE}"
+      - pwd
+      - make mod-dl
+
+  build:
+    commands:
+      - pwd
+      - make zip
+      - aws s3 cp ${ZIP_NAME} s3://${S3_BUCKET}/${S3_DIR}/
+
+  post_build:
+    commands:
+      - aws lambda update-function-code --function-name MyGoAPIFunction --s3-bucket ${S3_BUCKET} --s3-key ${S3_DIR}/${ZIP_NAME}
