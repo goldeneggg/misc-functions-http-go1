@@ -28,10 +28,15 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	result, err := resource.Access(ctx, params)
 	log.Printf("result: %#v\n", result)
 
-	return events.APIGatewayProxyResponse{
-		Body:       result.Body,
-		StatusCode: result.StatusCode,
-	}, err
+	pres := events.APIGatewayProxyResponse{}
+	pres.Body = result.Body
+	pres.StatusCode = result.StatusCode
+	if result.Header != nil {
+		pres.Headers = result.Header
+	}
+
+	log.Printf("----- ProxyResponse: %#v\n", pres)
+	return pres, err
 }
 
 func newParams(request events.APIGatewayProxyRequest) *resource.Params {

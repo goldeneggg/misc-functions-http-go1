@@ -2,7 +2,6 @@ package resource
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -10,10 +9,6 @@ import (
 
 var (
 	HelloDefaultHTTPGetAddress = "https://checkip.amazonaws.com"
-
-	errNon200Response = errors.New("Non 200 Response found")
-	errNoIP           = errors.New("No IP in HTTP response")
-	errNotImplemented = errors.New("Not Implemented")
 )
 
 type Hello struct {
