@@ -4,18 +4,11 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/external"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/goldeneggg/misc-functions-http-go1/hello-world/store/dynamo"
 )
 
 type HelloDyn struct {
 	Service string
-}
-
-type Movie struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
 }
 
 func (helloDyn *HelloDyn) Get(ctx context.Context, p *Params) (*Result, error) {
@@ -24,32 +17,14 @@ func (helloDyn *HelloDyn) Get(ctx context.Context, p *Params) (*Result, error) {
 }
 
 func (helloDyn *HelloDyn) Post(ctx context.Context, p *Params) (*Result, error) {
-	var movie Movie
+	var movie dynamo.Movie
 
 	err := json.Unmarshal([]byte(p.Body), &movie)
 	if err != nil {
 		return NewResultWithErrorAndStatus(err, 500)
 	}
 
-	cfg, err := external.LoadDefaultAWSConfig()
-	if err != nil {
-		return NewResultWithErrorAndStatus(err, 500)
-	}
-
-	svc := dynamodb.New(cfg)
-	req := svc.PutItemRequest(&dynamodb.PutItemInput{
-		TableName: aws.String(p.QueryParams["tn"]),
-		Item: map[string]dynamodb.AttributeValue{
-			"ID": dynamodb.AttributeValue{
-				S: aws.String(movie.ID),
-			},
-			"Name": dynamodb.AttributeValue{
-				S: aws.String(movie.Name),
-			},
-		},
-	})
-
-	_, err = req.Send()
+	err = movie.PutItem(ctx)
 	if err != nil {
 		return NewResultWithErrorAndStatus(err, 500)
 	}
