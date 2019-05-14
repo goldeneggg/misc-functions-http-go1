@@ -65,6 +65,13 @@ curl-get:
 gen-event:
 	@sam local generate-event apigateway aws-proxy > $(LOCAL_EVENT)
 
+# See: https://hackernoon.com/golang-clean-archithecture-efd6d7c43047
+new-domain:
+	@read -p 'Input new domain name?: ' name; \
+		mkdir -p $(CODE)/entity && touch $(CODE)/entity/$$name.go && \
+		mkdir -p $(CODE)/$$name/{delivery,repository,usecase} && \
+		touch $(CODE)/$$name/repository.go $(CODE)/$$name/usecase.go $(CODE)/$$name/repository/.gitkeep $(CODE)/$$name/usecase/.gitkeep $(CODE)/$$name/delivery/.gitkeep
+
 ###
 # for local debug
 ###
