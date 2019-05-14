@@ -4,7 +4,6 @@ API_PATH := /hello
 FUNC_NAME := MyGoAPIFunction
 
 PKG_AWS_LAMBDA_GO := github.com/aws/aws-lambda-go
-PKG_AWS_SDK_GO := github.com/aws/aws-sdk-go
 PKG_AWS_SDK_GO_V2 := github.com/aws/aws-sdk-go-v2
 
 MAIN_GO := ./$(CODE)/main.go
@@ -156,9 +155,6 @@ chk_versions = go list -u -m -versions $1 | tr ' ' '\n'
 
 chk-versions-aws-lambda-go:
 	@$(call chk_versions,$(PKG_AWS_LAMBDA_GO))
-
-chk-versions-aws-sdk-go:
-	@$(call chk_versions,$(PKG_AWS_SDK_GO))
 
 chk-versions-aws-sdk-go-v2:
 	@$(call chk_versions,$(PKG_AWS_SDK_GO_V2))

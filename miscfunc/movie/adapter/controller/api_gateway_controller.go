@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/aws/aws-lambda-go/events"
 
@@ -18,17 +19,22 @@ type APIGatewayController struct {
 
 func NewAPIGatewayController(
 	uc movie.Usecase,
-	proxyReq events.APIGatewayProxyRequest,
-	proxyResp events.APIGatewayProxyResponse) adapter.Controller {
+	proxyReq events.APIGatewayProxyRequest) adapter.Controller {
 
 	return &APIGatewayController{
 		uc:        uc,
 		proxyReq:  proxyReq,
-		proxyResp: proxyResp,
+		proxyResp: events.APIGatewayProxyResponse{},
 	}
 }
 
 func (ac *APIGatewayController) Create(ctx context.Context) (*entity.Movie, error) {
-	// TODO
-	return &entity.Movie{}, nil
+	var movie entity.Movie
+
+	err := json.Unmarshal([]byte(ac.proxyReq.Body), &movie)
+	if err != nil {
+		return nil, err
+	}
+
+	return ac.uc.Create(ctx, &movie)
 }

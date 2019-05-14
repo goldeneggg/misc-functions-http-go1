@@ -17,6 +17,6 @@ func NewDefaultUsecase(gw adapter.Gateway) movie.Usecase {
 }
 
 func (du *DefaultUsecase) Create(ctx context.Context, movie *entity.Movie) (*entity.Movie, error) {
-	// TODO
-	return &entity.Movie{}, nil
+	err := du.gw.Create(ctx, movie)
+	return movie, err
 }
