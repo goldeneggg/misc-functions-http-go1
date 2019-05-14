@@ -1,4 +1,4 @@
-package dynamo
+package gateway
 
 import (
 	"context"
@@ -6,24 +6,29 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+
+	"github.com/goldeneggg/misc-functions-http-go1/miscfunc/entity"
+	"github.com/goldeneggg/misc-functions-http-go1/miscfunc/movie/adapter"
 )
 
 const (
 	TABLE_NAME = "movies"
 )
 
-type Movie struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+type DynamoGateway struct {
+	db *dynamodb.DynamoDB
 }
 
-func (movie *Movie) PutItem(ctx context.Context) error {
+func NewDynamoGateway() (adapter.Gateway, error) {
 	cfg, err := external.LoadDefaultAWSConfig()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	svc := dynamodb.New(cfg)
+	return &DynamoGateway{dynamodb.New(cfg)}, nil
+}
+
+func (dg *DynamoGateway) Create(ctx context.Context, movie *entity.Movie) error {
 	input := &dynamodb.PutItemInput{
 		TableName: aws.String(TABLE_NAME),
 		Item: map[string]dynamodb.AttributeValue{
@@ -35,9 +40,9 @@ func (movie *Movie) PutItem(ctx context.Context) error {
 			},
 		},
 	}
-	req := svc.PutItemRequest(input)
+	req := dg.db.PutItemRequest(input)
 
-	_, err = req.Send(ctx)
+	_, err := req.Send(ctx)
 	if err != nil {
 		return err
 	}

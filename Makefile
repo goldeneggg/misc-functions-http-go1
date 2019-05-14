@@ -76,9 +76,9 @@ new-ca:
 new-domain:
 	@read -p 'Input new domain name?: ' name; \
 		mkdir -p $(CODE)/entity && touch $(CODE)/entity/$$name.go && \
-		mkdir -p $(CODE)/$$name/{usecase,adapter/{controller,presenter,gateway},infra} && \
-		touch $(CODE)/$$name/usecase.go $(CODE)/$$name/adapter/controller.go $(CODE)/$$name/adapter/presenter.go $(CODE)/$$name/adapter/gateway.go && \
-		touch $(CODE)/$$name/usecase/.gitkeep $(CODE)/$$name/adapter/controller/.gitkeep $(CODE)/$$name/adapter/presenter/.gitkeep $(CODE)/$$name/adapter/gateway/.gitkeep $(CODE)/$$name/infra/.gitkeep
+		mkdir -p $(CODE)/$$name/{usecase,adapter/{controller,gateway},infra} && \
+		touch $(CODE)/$$name/usecase.go $(CODE)/$$name/adapter/controller.go $(CODE)/$$name/adapter/gateway.go && \
+		touch $(CODE)/$$name/usecase/.gitkeep $(CODE)/$$name/adapter/controller/.gitkeep $(CODE)/$$name/adapter/gateway/.gitkeep $(CODE)/$$name/infra/.gitkeep
 
 ###
 # for local debug
