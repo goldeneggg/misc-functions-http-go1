@@ -3,6 +3,10 @@ CODE := hello-world
 API_PATH := /hello
 FUNC_NAME := MyGoAPIFunction
 
+PKG_AWS_LAMBDA_GO := github.com/aws/aws-lambda-go
+PKG_AWS_SDK_GO := github.com/aws/aws-sdk-go
+PKG_AWS_SDK_GO_V2 := github.com/aws/aws-sdk-go-v2
+
 MAIN_GO := ./$(CODE)/main.go
 CLIENT_GO := ./$(CODE)/client.go
 EXE := ./$(CODE)/$(CODE)
@@ -49,9 +53,6 @@ rebuild: clean build
 ###
 # for local development
 ###
-mod-dl:
-	@GO111MODULE=on go mod download
-
 $(LOCAL_TEMPLATE):
 	@[ -f $(LOCAL_TEMPLATE) ] && rm $(LOCAL_TEMPLATE);  cp template.yaml $(LOCAL_TEMPLATE)
 
@@ -117,6 +118,9 @@ show-api-url:
 ###
 # for manage go modules
 ###
+mod-dl:
+	@GO111MODULE=on go mod download
+
 mod-tidy:
 	@GO111MODULE=on go mod tidy -v
 
@@ -133,6 +137,16 @@ vendor-build:
 vendor-debug-build:
 	@GOOS=linux GOARCH=amd64 go build -gcflags='-N -l' -o $(EXE) -mod vendor $(MAIN_GO)
 
+chk_versions = go list -u -m -versions $1 | tr ' ' '\n'
+
+chk-versions-aws-lambda-go:
+	@$(call chk_versions,$(PKG_AWS_LAMBDA_GO))
+
+chk-versions-aws-sdk-go:
+	@$(call chk_versions,$(PKG_AWS_SDK_GO))
+
+chk-versions-aws-sdk-go-v2:
+	@$(call chk_versions,$(PKG_AWS_SDK_GO_V2))
 
 # DEPRECATE as follows
 
