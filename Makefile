@@ -1,5 +1,5 @@
 PROJECT := misc-functions-http-go1
-CODE := hello-world
+CODE := miscfunc
 API_PATH := /hello
 FUNC_NAME := MyGoAPIFunction
 
