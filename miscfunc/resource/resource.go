@@ -18,6 +18,8 @@ func newResource(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (R
 	switch proxyReq.Path {
 	case "/hello":
 		return &Hello{}, nil
+	case "/hellodyn":
+		return &HelloDyn{}, nil
 	case "/crawler":
 		return &Crawler{}, nil
 	}
