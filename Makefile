@@ -67,6 +67,33 @@ gen-event:
 	@sam local generate-event apigateway aws-proxy > $(LOCAL_EVENT)
 
 ###
+# for local DynamoDB
+###
+
+# See:
+# - https://docs.aws.amazon.com/ja_jp/amazondynamodb/latest/developerguide/DynamoDBLocal.html
+# - https://github.com/aws-samples/aws-sam-java-rest
+
+pull-local-dynamo:
+	@docker pull amazon/dynamodb-local
+
+run-local-dynamo:
+	@docker run -p 8000:8000 amazon/dynamodb-local
+
+list-table-local-dynamo:
+	@aws dynamodb list-tables --endpoint-url http://localhost:8000
+
+gen-workstatus-skel-json:
+	@aws dynamodb create-table --generate-cli-skeleton > testdata/skel-workstatus-create-table.json
+
+create-workstatus-table-local-dynamo:
+	@aws dynamodb create-table --cli-input-json file://testdata/skel-workstatus-create-table.json --endpoint-url http://localhost:8000
+
+delete-workstatus-table-local-dynamo:
+	@aws dynamodb delete-table --table-name workstatus --endpoint-url http://localhost:8000
+
+
+###
 # for local debug
 ###
 build-dlv:

@@ -2,7 +2,6 @@ package gateway
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/external"
@@ -13,7 +12,7 @@ import (
 )
 
 const (
-	TABLE_NAME = "workstatuss"
+	TABLE_NAME = "workstatus"
 )
 
 type DynamoGateway struct {
@@ -36,11 +35,8 @@ func (dg *DynamoGateway) Create(ctx context.Context, workstatus *entity.Workstat
 			"ID": dynamodb.AttributeValue{
 				S: aws.String(workstatus.ID),
 			},
-			"YM": dynamodb.AttributeValue{
-				N: aws.String(strconv.FormatInt(workstatus.YM, 10)),
-			},
-			"Desc": dynamodb.AttributeValue{
-				S: aws.String(workstatus.Desc),
+			"Content": dynamodb.AttributeValue{
+				S: aws.String(workstatus.Content),
 			},
 		},
 	}
