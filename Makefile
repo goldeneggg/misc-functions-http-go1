@@ -51,13 +51,13 @@ rebuild: clean build
 ###
 # for local API Gateway development
 ###
-$(LOCAL_TEMPLATE):
+cp-tmpl-local:
 	@[ -f $(LOCAL_TEMPLATE) ] && rm $(LOCAL_TEMPLATE);  cp template.yaml $(LOCAL_TEMPLATE)
 
-api: build $(LOCAL_TEMPLATE)
+api: build cp-tmpl-local
 	@sam local start-api -t $(LOCAL_TEMPLATE) -p $(API_PORT)
 
-api-samdev: build $(LOCAL_TEMPLATE)
+api-samdev: build cp-tmpl-local
 	@samdev local start-api -t $(LOCAL_TEMPLATE) -p $(API_PORT)
 
 curl-get:
@@ -77,8 +77,11 @@ debug-build:
 
 # See: https://github.com/awslabs/aws-sam-cli/issues/1067#issuecomment-489406846
 # 最新のsam＆delve＆lambciの組み合わせだと動かない
-debug-api: debug-build $(LOCAL_TEMPLATE)
+debug-api: build-dlv debug-build cp-tmpl-local
 	@sam local start-api -t $(LOCAL_TEMPLATE) -p $(API_PORT) -d $(DEBUG_PORT) --debugger-path $(TOOL_DIR) --debug-args="-delveAPI=2" --debug
+
+debug-api-samdev: build-dlv debug-build cp-tmpl-local
+	@samdev local start-api -t $(LOCAL_TEMPLATE) -p $(API_PORT) -d $(DEBUG_PORT) --debugger-path $(TOOL_DIR) --debug-args="-delveAPI=2" --debug
 
 ###
 # for test
