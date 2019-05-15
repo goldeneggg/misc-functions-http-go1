@@ -48,9 +48,8 @@ rebuild: clean build
 #
 ###############################
 
-
 ###
-# for local development
+# for local API Gateway development
 ###
 $(LOCAL_TEMPLATE):
 	@[ -f $(LOCAL_TEMPLATE) ] && rm $(LOCAL_TEMPLATE);  cp template.yaml $(LOCAL_TEMPLATE)
@@ -58,26 +57,14 @@ $(LOCAL_TEMPLATE):
 api: build $(LOCAL_TEMPLATE)
 	@sam local start-api -t $(LOCAL_TEMPLATE) -p $(API_PORT)
 
+api-samdev: build $(LOCAL_TEMPLATE)
+	@samdev local start-api -t $(LOCAL_TEMPLATE) -p $(API_PORT)
+
 curl-get:
 	@curl -XGET http://127.0.0.1:$(API_PORT)$(API_PATH)
 
 gen-event:
 	@sam local generate-event apigateway aws-proxy > $(LOCAL_EVENT)
-
-# See: https://hackernoon.com/golang-clean-archithecture-efd6d7c43047
-new-ca:
-	@read -p 'Input new domain name?: ' name; \
-		mkdir -p $(CODE)/entity && touch $(CODE)/entity/$$name.go && \
-		mkdir -p $(CODE)/$$name/{delivery,repository,usecase} && \
-		touch $(CODE)/$$name/repository.go $(CODE)/$$name/usecase.go $(CODE)/$$name/repository/.gitkeep $(CODE)/$$name/usecase/.gitkeep $(CODE)/$$name/delivery/.gitkeep
-
-# original version
-new-domain:
-	@read -p 'Input new domain name?: ' name; \
-		mkdir -p $(CODE)/entity && touch $(CODE)/entity/$$name.go && \
-		mkdir -p $(CODE)/$$name/{usecase,adapter/{controller,gateway},infra} && \
-		touch $(CODE)/$$name/usecase.go $(CODE)/$$name/adapter/controller.go $(CODE)/$$name/adapter/gateway.go && \
-		touch $(CODE)/$$name/usecase/.gitkeep $(CODE)/$$name/adapter/controller/.gitkeep $(CODE)/$$name/adapter/gateway/.gitkeep $(CODE)/$$name/infra/.gitkeep
 
 ###
 # for local debug
@@ -158,6 +145,25 @@ chk-versions-aws-lambda-go:
 
 chk-versions-aws-sdk-go-v2:
 	@$(call chk_versions,$(PKG_AWS_SDK_GO_V2))
+
+###
+# for add new feature
+###
+
+# See: https://hackernoon.com/golang-clean-archithecture-efd6d7c43047
+new-ca:
+	@read -p 'Input new domain name?: ' name; \
+		mkdir -p $(CODE)/entity && touch $(CODE)/entity/$$name.go && \
+		mkdir -p $(CODE)/$$name/{delivery,repository,usecase} && \
+		touch $(CODE)/$$name/repository.go $(CODE)/$$name/usecase.go $(CODE)/$$name/repository/.gitkeep $(CODE)/$$name/usecase/.gitkeep $(CODE)/$$name/delivery/.gitkeep
+
+# original version
+new-domain:
+	@read -p 'Input new domain name?: ' name; \
+		mkdir -p $(CODE)/entity && touch $(CODE)/entity/$$name.go && \
+		mkdir -p $(CODE)/$$name/{usecase,adapter/{controller,gateway},infra} && \
+		touch $(CODE)/$$name/usecase.go $(CODE)/$$name/adapter/controller.go $(CODE)/$$name/adapter/gateway.go && \
+		touch $(CODE)/$$name/usecase/.gitkeep $(CODE)/$$name/adapter/controller/.gitkeep $(CODE)/$$name/adapter/gateway/.gitkeep $(CODE)/$$name/infra/.gitkeep
 
 # DEPRECATE as follows
 
