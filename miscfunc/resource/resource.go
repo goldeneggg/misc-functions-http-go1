@@ -14,19 +14,6 @@ type Resource interface {
 	Delete(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error)
 }
 
-func newResource(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (Resource, error) {
-	switch proxyReq.Path {
-	case "/hello":
-		return newHelloResource(ctx, proxyReq)
-	case "/workstatus":
-		return newWorkstatusResource(ctx, proxyReq)
-	case "/crawler":
-		return newCrawlerResource(ctx, proxyReq)
-	}
-
-	return nil, fmt.Errorf("invalid request: %#v", proxyReq)
-}
-
 func Access(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	r, err := newResource(ctx, proxyReq)
 	if err != nil {
@@ -63,4 +50,17 @@ func NewResultWithHeader(body string, sts int, header map[string]string) events.
 
 func NewResultWithErrorAndStatus(err error, sts int) (events.APIGatewayProxyResponse, error) {
 	return NewResult(err.Error(), sts), err
+}
+
+func newResource(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (Resource, error) {
+	switch proxyReq.Path {
+	case "/hello":
+		return newHelloResource(ctx, proxyReq)
+	case "/workstatus":
+		return newWorkstatusResource(ctx, proxyReq)
+	case "/crawler":
+		return newCrawlerResource(ctx, proxyReq)
+	}
+
+	return nil, fmt.Errorf("invalid request: %#v", proxyReq)
 }
