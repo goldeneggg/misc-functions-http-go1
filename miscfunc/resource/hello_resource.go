@@ -57,3 +57,7 @@ func (hello *Hello) Delete(ctx context.Context, proxyReq events.APIGatewayProxyR
 	// TODO
 	return NewResultWithErrorAndStatus(errNotImplemented, 400)
 }
+
+func newHelloResource(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (*Hello, error) {
+	return &Hello{}, nil
+}

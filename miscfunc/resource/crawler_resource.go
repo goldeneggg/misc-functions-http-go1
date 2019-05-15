@@ -29,3 +29,7 @@ func (crawler *Crawler) Delete(ctx context.Context, proxyReq events.APIGatewayPr
 	// TODO
 	return NewResultWithErrorAndStatus(errNotImplemented, 400)
 }
+
+func newCrawlerResource(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (*Crawler, error) {
+	return &Crawler{}, nil
+}

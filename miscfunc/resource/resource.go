@@ -17,11 +17,11 @@ type Resource interface {
 func newResource(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (Resource, error) {
 	switch proxyReq.Path {
 	case "/hello":
-		return &Hello{}, nil
-	case "/hellodyn":
-		return &HelloDyn{}, nil
+		return newHelloResource(ctx, proxyReq)
+	case "/workstatus":
+		return newWorkstatusResource(ctx, proxyReq)
 	case "/crawler":
-		return &Crawler{}, nil
+		return newCrawlerResource(ctx, proxyReq)
 	}
 
 	return nil, fmt.Errorf("invalid request: %#v", proxyReq)

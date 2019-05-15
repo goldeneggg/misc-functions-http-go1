@@ -6,6 +6,6 @@ import (
 	"github.com/goldeneggg/misc-functions-http-go1/miscfunc/entity"
 )
 
-type Controller interface {
-	Create(ctx context.Context) (*entity.Movie, error)
+type Gateway interface {
+	Create(ctx context.Context, workstatus *entity.Workstatus) error
 }

@@ -7,18 +7,18 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 
 	"github.com/goldeneggg/misc-functions-http-go1/miscfunc/entity"
-	"github.com/goldeneggg/misc-functions-http-go1/miscfunc/movie"
-	"github.com/goldeneggg/misc-functions-http-go1/miscfunc/movie/adapter"
+	"github.com/goldeneggg/misc-functions-http-go1/miscfunc/workstatus"
+	"github.com/goldeneggg/misc-functions-http-go1/miscfunc/workstatus/adapter"
 )
 
 type APIGatewayController struct {
-	uc        movie.Usecase
+	uc        workstatus.Usecase
 	proxyReq  events.APIGatewayProxyRequest
 	proxyResp events.APIGatewayProxyResponse
 }
 
 func NewAPIGatewayController(
-	uc movie.Usecase,
+	uc workstatus.Usecase,
 	proxyReq events.APIGatewayProxyRequest) adapter.Controller {
 
 	return &APIGatewayController{
@@ -28,13 +28,13 @@ func NewAPIGatewayController(
 	}
 }
 
-func (ac *APIGatewayController) Create(ctx context.Context) (*entity.Movie, error) {
-	var movie entity.Movie
+func (ac *APIGatewayController) Create(ctx context.Context) (*entity.Workstatus, error) {
+	var workstatus entity.Workstatus
 
-	err := json.Unmarshal([]byte(ac.proxyReq.Body), &movie)
+	err := json.Unmarshal([]byte(ac.proxyReq.Body), &workstatus)
 	if err != nil {
 		return nil, err
 	}
 
-	return ac.uc.Create(ctx, &movie)
+	return ac.uc.Create(ctx, &workstatus)
 }

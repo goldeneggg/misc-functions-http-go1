@@ -1,4 +1,4 @@
-package movie
+package workstatus
 
 import (
 	"context"
@@ -7,5 +7,5 @@ import (
 )
 
 type Usecase interface {
-	Create(ctx context.Context, movie *entity.Movie) (*entity.Movie, error)
+	Create(ctx context.Context, workstatus *entity.Workstatus) (*entity.Workstatus, error)
 }
