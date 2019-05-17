@@ -2,6 +2,8 @@ package resource
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"github.com/aws/aws-lambda-go/events"
 
@@ -15,8 +17,34 @@ type Workstatus struct {
 }
 
 func (ws *Workstatus) Get(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	// TODO
-	return NewResultWithErrorAndStatus(errNotImplemented, 400)
+	ctrl, err := ws.newController(ctx, proxyReq)
+	if err != nil {
+		return NewResultWithErrorAndStatus(err, 500)
+	}
+
+	v, ok := proxyReq.QueryStringParameters["type"]
+	if !ok {
+		err := fmt.Errorf("Invalid request parameter: %#v", proxyReq.QueryStringParameters)
+		return NewResult(err.Error(), 500), err
+	}
+
+	switch v {
+	case "desc":
+		desc, err := ctrl.Desc(ctx)
+		if err != nil {
+			return NewResult(err.Error(), 500), err
+		}
+
+		b, err := json.Marshal(desc)
+		if err != nil {
+			return NewResult(err.Error(), 500), err
+		}
+
+		return NewResultWithHeader(string(b), 200, map[string]string{"Content-Type": "application/json"}), nil
+	default:
+		err := fmt.Errorf("Invalid type: %s", v)
+		return NewResult(err.Error(), 500), err
+	}
 }
 
 func (ws *Workstatus) Post(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {

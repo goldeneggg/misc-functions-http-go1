@@ -20,3 +20,8 @@ func (du *DefaultUsecase) Create(ctx context.Context, workstatus *entity.Worksta
 	err := du.gw.Create(ctx, workstatus)
 	return workstatus, err
 }
+
+func (du *DefaultUsecase) Desc(ctx context.Context) (*entity.DescWorkstatus, error) {
+	descw, err := du.gw.Desc(ctx)
+	return descw, err
+}

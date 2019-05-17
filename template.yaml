@@ -24,7 +24,7 @@ Description: >
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 10
+    Timeout: 15
 #     Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
 #       Variables:
 #         HOGE_TOKEN: "HUGA"
@@ -58,6 +58,9 @@ Resources:
             TableName: !Ref WorkstatusDynamoDBTable
       #   - KMSDecryptPolicy:
       #       KeyId: !Ref KeyIdParameter
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          USE_LOCAL_DYNAMO: "false"
       Events:
         GetHello:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -69,14 +72,16 @@ Resources:
           Properties:
             Path: /workstatus
             Method: POST
+        DescWorkstatus:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /workstatus
+            Method: GET
         GetCrawler:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /crawler
             Method: GET
-      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
-        Variables:
-          PARAM1: VALUE
   WorkstatusDynamoDBTable:
     Type: 'AWS::DynamoDB::Table'
     Properties:

@@ -38,3 +38,7 @@ func (ac *APIGatewayController) Create(ctx context.Context) (*entity.Workstatus,
 
 	return ac.uc.Create(ctx, &workstatus)
 }
+
+func (ac *APIGatewayController) Desc(ctx context.Context) (*entity.DescWorkstatus, error) {
+	return ac.uc.Desc(ctx)
+}

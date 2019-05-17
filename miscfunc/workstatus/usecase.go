@@ -8,4 +8,5 @@ import (
 
 type Usecase interface {
 	Create(ctx context.Context, workstatus *entity.Workstatus) (*entity.Workstatus, error)
+	Desc(ctx context.Context) (*entity.DescWorkstatus, error)
 }

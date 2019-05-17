@@ -1,0 +1,5 @@
+{
+  "MiscGoAPIFunction": {
+    "USE_LOCAL_DYNAMO": "true"
+  }
+}

@@ -8,4 +8,5 @@ import (
 
 type Controller interface {
 	Create(ctx context.Context) (*entity.Workstatus, error)
+	Desc(ctx context.Context) (*entity.DescWorkstatus, error)
 }

@@ -9,8 +9,11 @@ PKG_AWS_SDK_GO_V2 := github.com/aws/aws-sdk-go-v2
 MAIN_GO := ./$(CODE)/main.go
 CLIENT_GO := ./$(CODE)/client.go
 EXE := ./$(CODE)/$(CODE)
+LOCAL_ENVS := ./localenvs.json
 LOCAL_EVENT := ./.event.json
 API_PORT := 3999
+DOCKER_LOCAL_DYNAMO_NAME := localdynamo
+DOCKER_LOCAL_DYNAMO_NETWORK := sam-dynamo-network
 TOOL_DIR := bin
 PKG_DLV := github.com/go-delve/delve/cmd/dlv
 DLV := $(TOOL_DIR)/dlv
@@ -55,13 +58,24 @@ cp-tmpl-local:
 	@[ -f $(LOCAL_TEMPLATE) ] && rm $(LOCAL_TEMPLATE);  cp template.yaml $(LOCAL_TEMPLATE)
 
 api: build cp-tmpl-local
-	@sam local start-api -t $(LOCAL_TEMPLATE) -p $(API_PORT)
+	@sam local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT)
+
+# Note: must execute run-local-dynamo target before start-api
+api-with-localdynamo: build cp-tmpl-local
+	@sam local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT) --docker-network $(DOCKER_LOCAL_DYNAMO_NETWORK)
 
 api-samdev: build cp-tmpl-local
-	@samdev local start-api -t $(LOCAL_TEMPLATE) -p $(API_PORT)
+	@samdev local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT)
+
+# Note: must execute run-local-dynamo target before start-api
+api-samdev-with-localdynamo: build cp-tmpl-local
+	@sam local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT) --docker-network $(DOCKER_LOCAL_DYNAMO_NETWORK)
 
 curl-get:
 	@curl -XGET http://127.0.0.1:$(API_PORT)$(API_PATH)
+
+curl-get-workstatus-desc:
+	@curl -XGET "http://127.0.0.1:$(API_PORT)/workstatus?type=desc"
 
 gen-event:
 	@sam local generate-event apigateway aws-proxy > $(LOCAL_EVENT)
@@ -77,11 +91,11 @@ gen-event:
 pull-local-dynamo:
 	@docker pull amazon/dynamodb-local
 
-run-local-dynamo:
-	@docker run -p 8000:8000 amazon/dynamodb-local
+create-docker-network-for-local-dynamo:
+	@docker network create sam-dynamo-network
 
-list-table-local-dynamo:
-	@aws dynamodb list-tables --endpoint-url http://localhost:8000
+run-local-dynamo:
+	@docker run --rm -p 8000:8000 --name $(DOCKER_LOCAL_DYNAMO_NAME) --network $(DOCKER_LOCAL_DYNAMO_NETWORK) amazon/dynamodb-local
 
 gen-workstatus-skel-json:
 	@aws dynamodb create-table --generate-cli-skeleton > testdata/skel-workstatus-create-table.json
@@ -91,6 +105,15 @@ create-workstatus-table-local-dynamo:
 
 delete-workstatus-table-local-dynamo:
 	@aws dynamodb delete-table --table-name workstatus --endpoint-url http://localhost:8000
+
+list-table-local-dynamo:
+	@aws dynamodb list-tables --endpoint-url http://localhost:8000
+
+desc-table-local-dynamo:
+	@aws dynamodb describe-table --table-name workstatus --endpoint-url http://localhost:8000
+
+load-testdata-into-local-dynamo:
+	@aws dynamodb list-tables --endpoint-url http://localhost:8000
 
 
 ###
