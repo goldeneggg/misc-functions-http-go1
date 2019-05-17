@@ -31,7 +31,7 @@ TARGET_PKGS = $(shell go list ./... | \grep -v 'vendor')
 .DEFAULT_GOAL := build
 
 .PHONY: deps
-deps:
+setup-deps:
 	@go get github.com/aws/aws-lambda-go/...@latest
 
 .PHONY: build
@@ -77,7 +77,7 @@ curl-get:
 curl-get-workstatus-desc:
 	@curl -XGET "http://127.0.0.1:$(API_PORT)/workstatus?type=desc"
 
-gen-event:
+setup-local-event:
 	@sam local generate-event apigateway aws-proxy > $(LOCAL_EVENT)
 
 ###
@@ -88,16 +88,15 @@ gen-event:
 # - https://docs.aws.amazon.com/ja_jp/amazondynamodb/latest/developerguide/DynamoDBLocal.html
 # - https://github.com/aws-samples/aws-sam-java-rest
 
-pull-local-dynamo:
+_pull-local-dynamo:
 	@docker pull amazon/dynamodb-local
 
-create-docker-network-for-local-dynamo:
-	@docker network create sam-dynamo-network
+_create-docker-network-for-local-dynamo:
+	@docker network create $(DOCKER_LOCAL_DYNAMO_NETWORK)
 
-run-local-dynamo:
-	@docker run --rm -p 8000:8000 --name $(DOCKER_LOCAL_DYNAMO_NAME) --network $(DOCKER_LOCAL_DYNAMO_NETWORK) amazon/dynamodb-local
+setup-dynamo-docker: _pull-local-dynamo _create-docker-network-for-local-dynamo
 
-gen-workstatus-skel-json:
+setup-dynamo-workstatus-table-skelton:
 	@aws dynamodb create-table --generate-cli-skeleton > testdata/skel-workstatus-create-table.json
 
 create-workstatus-table-local-dynamo:
@@ -106,14 +105,14 @@ create-workstatus-table-local-dynamo:
 delete-workstatus-table-local-dynamo:
 	@aws dynamodb delete-table --table-name workstatus --endpoint-url http://localhost:8000
 
+run-local-dynamo:
+	@docker run --rm -p 8000:8000 --name $(DOCKER_LOCAL_DYNAMO_NAME) --network $(DOCKER_LOCAL_DYNAMO_NETWORK) amazon/dynamodb-local
+
 list-table-local-dynamo:
 	@aws dynamodb list-tables --endpoint-url http://localhost:8000
 
 desc-table-local-dynamo:
 	@aws dynamodb describe-table --table-name workstatus --endpoint-url http://localhost:8000
-
-load-testdata-into-local-dynamo:
-	@aws dynamodb list-tables --endpoint-url http://localhost:8000
 
 
 ###
@@ -218,7 +217,7 @@ new-domain:
 		touch $(CODE)/$$name/usecase.go $(CODE)/$$name/adapter/controller.go $(CODE)/$$name/adapter/gateway.go && \
 		touch $(CODE)/$$name/usecase/.gitkeep $(CODE)/$$name/adapter/controller/.gitkeep $(CODE)/$$name/adapter/gateway/.gitkeep $(CODE)/$$name/infra/.gitkeep
 
-# DEPRECATE as follows
+# DEPRECATEs as follows
 
 ###
 # for manage apigateway

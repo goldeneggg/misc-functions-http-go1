@@ -31,9 +31,6 @@ Globals:
 #         KMS_REGION: ap-northeast-1
 
 Resources:
-  # TODO: aws-cli, aws-sam-cliの実行IAMユーザ（.aws/credentials設定）に依存させたくなければ、
-  # Roleの定義をtemplate.yamlで行うという策もあるが、メリデメを理解してから対応する
-  #
   # MiscGoAPIFunctionRole:
   #   Type: "AWS::IAM::Role"
   #   Properties:
@@ -53,7 +50,7 @@ Resources:
       Handler: miscfunc
       Runtime: go1.x
       Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
-      Policies:
+      Policies: # More info: https://github.com/awslabs/serverless-application-model/blob/master/examples/2016-10-31/policy_templates/all_policy_templates.yaml
         - DynamoDBCrudPolicy:
             TableName: !Ref WorkstatusDynamoDBTable
       #   - KMSDecryptPolicy:
