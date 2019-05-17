@@ -3,7 +3,6 @@ package gateway
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -37,7 +36,6 @@ func NewDynamoGateway() (adapter.Gateway, error) {
 			"http://%s:%d",
 			LOCAL_DYNAMO_CONTAINER_NAME,
 			LOCAL_DYNAMO_PORT)
-		log.Printf("@@@ localDynamoURL: %s\n", localDynamoURL)
 		cfg.EndpointResolver = aws.ResolveWithEndpointURL(localDynamoURL)
 	}
 	return &DynamoGateway{dynamodb.New(cfg)}, nil
@@ -66,25 +64,22 @@ func (dg *DynamoGateway) Create(ctx context.Context, workstatus *entity.Workstat
 }
 
 func (dg *DynamoGateway) Desc(ctx context.Context) (*entity.DescWorkstatus, error) {
-	return dg.listTables(ctx)
+	return dg.describeTable(ctx)
 }
 
 func (dg *DynamoGateway) describeTable(ctx context.Context) (*entity.DescWorkstatus, error) {
 	// Build the request with its input parameters
-	log.Printf("@@@ start\n")
 	req := dg.db.DescribeTableRequest(&dynamodb.DescribeTableInput{
 		TableName: aws.String("workstatus"),
 	})
 
 	// Send the request, and get the response or error back
-	log.Printf("@@@ req: %#v\n", req)
 	out, err := req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO other columns setting
-	log.Printf("@@@ out: %#v\n", out)
 	desc := &entity.DescWorkstatus{
 		TableName: aws.StringValue(out.Table.TableName),
 	}
@@ -94,18 +89,15 @@ func (dg *DynamoGateway) describeTable(ctx context.Context) (*entity.DescWorksta
 
 func (dg *DynamoGateway) listTables(ctx context.Context) (*entity.DescWorkstatus, error) {
 	// Build the request with its input parameters
-	log.Printf("@@@ start\n")
 	req := dg.db.ListTablesRequest(&dynamodb.ListTablesInput{})
 
 	// Send the request, and get the response or error back
-	log.Printf("@@@ req: %#v\n", req)
-	out, err := req.Send(ctx)
+	_, err := req.Send(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO other columns setting
-	log.Printf("@@@ out: %#v\n", out)
 	desc := &entity.DescWorkstatus{
 		TableName: "dummy tableName",
 		Attrs:     "dummy attrs",

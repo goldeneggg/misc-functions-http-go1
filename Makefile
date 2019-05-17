@@ -88,30 +88,35 @@ setup-local-event:
 # - https://docs.aws.amazon.com/ja_jp/amazondynamodb/latest/developerguide/DynamoDBLocal.html
 # - https://github.com/aws-samples/aws-sam-java-rest
 
-_pull-local-dynamo:
+_pull-dynamo:
 	@docker pull amazon/dynamodb-local
 
-_create-docker-network-for-local-dynamo:
+_create-docker-network-for-dynamo:
 	@docker network create $(DOCKER_LOCAL_DYNAMO_NETWORK)
 
-setup-dynamo-docker: _pull-local-dynamo _create-docker-network-for-local-dynamo
+setup-dynamo-docker: _pull-dynamo _create-docker-network-for-dynamo
 
 setup-dynamo-workstatus-table-skelton:
 	@aws dynamodb create-table --generate-cli-skeleton > testdata/skel-workstatus-create-table.json
 
-create-workstatus-table-local-dynamo:
+up-dynamo: _run-dynamo _create-workstatus-table
+
+down-dynamo:
+	@docker stop $(DOCKER_LOCAL_DYNAMO_NAME)
+
+_run-dynamo:
+	@docker run -d --rm -p 8000:8000 --name $(DOCKER_LOCAL_DYNAMO_NAME) --network $(DOCKER_LOCAL_DYNAMO_NETWORK) amazon/dynamodb-local
+
+_create-workstatus-table:
 	@aws dynamodb create-table --cli-input-json file://testdata/skel-workstatus-create-table.json --endpoint-url http://localhost:8000
 
-delete-workstatus-table-local-dynamo:
+delete-workstatus-table:
 	@aws dynamodb delete-table --table-name workstatus --endpoint-url http://localhost:8000
 
-run-local-dynamo:
-	@docker run --rm -p 8000:8000 --name $(DOCKER_LOCAL_DYNAMO_NAME) --network $(DOCKER_LOCAL_DYNAMO_NETWORK) amazon/dynamodb-local
-
-list-table-local-dynamo:
+list-table:
 	@aws dynamodb list-tables --endpoint-url http://localhost:8000
 
-desc-table-local-dynamo:
+desc-table:
 	@aws dynamodb describe-table --table-name workstatus --endpoint-url http://localhost:8000
 
 
