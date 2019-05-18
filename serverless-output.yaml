@@ -7,38 +7,73 @@ Description: 'misc-functions-http-go1
   '
 Globals:
   Function:
-    Timeout: 10
+    Timeout: 15
 Resources:
-  MyGoAPIFunction:
+  MiscGoAPIFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://jpshadowapps-lambdas/misc-functions-http-go1/de9a4038adc7594c24bb305346380077
-      Handler: hello-world
+      CodeUri: s3://jpshadowapps-lambdas/misc-functions-http-go1/a4c41387db1a5f02512cee29f0557b77
+      Handler: miscfunc
       Runtime: go1.x
       Tracing: Active
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: WorkstatusDynamoDBTable
+      Environment:
+        Variables:
+          USE_LOCAL_DYNAMO: 'false'
       Events:
         GetHello:
           Type: Api
           Properties:
             Path: /hello
             Method: GET
-      Environment:
-        Variables:
-          PARAM1: VALUE
+        PostWorkstatus:
+          Type: Api
+          Properties:
+            Path: /workstatus
+            Method: POST
+        DescWorkstatus:
+          Type: Api
+          Properties:
+            Path: /workstatus
+            Method: GET
+        GetCrawler:
+          Type: Api
+          Properties:
+            Path: /crawler
+            Method: GET
+  WorkstatusDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: ID
+        AttributeType: S
+      - AttributeName: Content
+        AttributeType: S
+      KeySchema:
+      - AttributeName: ID
+        KeyType: HASH
+      - AttributeName: Content
+        KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
 Outputs:
-  MyGoAPI:
+  MiscGoAPI:
     Description: API Gateway endpoint URL for Prod environment for First Function
     Value:
       Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/
-  MyGoAPIFunction:
+  MiscGoAPIFunction:
     Description: First Lambda Function ARN
     Value:
       Fn::GetAtt:
-      - MyGoAPIFunction
+      - MiscGoAPIFunction
       - Arn
-  MyGoAPIFunctionIamRole:
-    Description: Implicit IAM Role created for Hello World function
+  WorkstatusDynamoDBTable:
+    Description: Workstatus DynamoDB Table
     Value:
       Fn::GetAtt:
-      - MyGoAPIFunctionRole
+      - WorkstatusDynamoDBTable
       - Arn
