@@ -14,6 +14,8 @@ LOCAL_EVENT := ./.event.json
 API_PORT := 3999
 DOCKER_LOCAL_DYNAMO_NAME := localdynamo
 DOCKER_LOCAL_DYNAMO_NETWORK := sam-dynamo-network
+TESTDATA_CREATE_TABLE := testdata/skel-workstatus-create-table.json
+TESTDATA_DATA := testdata/data.json
 TOOL_DIR := bin
 PKG_DLV := github.com/go-delve/delve/cmd/dlv
 DLV := $(TOOL_DIR)/dlv
@@ -77,6 +79,9 @@ curl-get:
 curl-get-workstatus-desc:
 	@curl -XGET "http://127.0.0.1:$(API_PORT)/workstatus?type=desc"
 
+curl-post-workstatus:
+	@curl -XPOST -d @$(TESTDATA_DATA) "http://127.0.0.1:$(API_PORT)/workstatus" 
+
 setup-local-event:
 	@sam local generate-event apigateway aws-proxy > $(LOCAL_EVENT)
 
@@ -97,21 +102,24 @@ _create-docker-network-for-dynamo:
 setup-dynamo-docker: _pull-dynamo _create-docker-network-for-dynamo
 
 setup-dynamo-workstatus-table-skelton:
-	@aws dynamodb create-table --generate-cli-skeleton > testdata/skel-workstatus-create-table.json
+	@aws dynamodb create-table --generate-cli-skeleton > $(TESTDATA_CREATE_TABLE)
 
 up-dynamo: _run-dynamo _create-workstatus-table
-
-down-dynamo:
-	@docker stop $(DOCKER_LOCAL_DYNAMO_NAME)
 
 _run-dynamo:
 	@docker run -d --rm -p 8000:8000 --name $(DOCKER_LOCAL_DYNAMO_NAME) --network $(DOCKER_LOCAL_DYNAMO_NETWORK) amazon/dynamodb-local
 
 _create-workstatus-table:
-	@aws dynamodb create-table --cli-input-json file://testdata/skel-workstatus-create-table.json --endpoint-url http://localhost:8000
+	@aws dynamodb create-table --cli-input-json file://$(TESTDATA_CREATE_TABLE) --endpoint-url http://localhost:8000
+
+down-dynamo:
+	@docker stop $(DOCKER_LOCAL_DYNAMO_NAME)
 
 delete-workstatus-table:
 	@aws dynamodb delete-table --table-name workstatus --endpoint-url http://localhost:8000
+
+scan-table:
+	@aws dynamodb scan --table-name workstatus --endpoint-url http://localhost:8000
 
 list-table:
 	@aws dynamodb list-tables --endpoint-url http://localhost:8000

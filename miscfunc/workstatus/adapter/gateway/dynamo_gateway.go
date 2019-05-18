@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -43,20 +44,28 @@ func NewDynamoGateway() (adapter.Gateway, error) {
 }
 
 func (dg *DynamoGateway) Create(ctx context.Context, workstatus *entity.Workstatus) error {
-	input := &dynamodb.PutItemInput{
-		TableName: aws.String(TABLE_NAME),
-		Item: map[string]dynamodb.AttributeValue{
-			"ID": dynamodb.AttributeValue{
-				S: aws.String(workstatus.ID),
-			},
-			"Content": dynamodb.AttributeValue{
-				S: aws.String(workstatus.Content),
-			},
+	content, err := json.Marshal(workstatus.Content)
+	if err != nil {
+		return err
+	}
+
+	item := map[string]dynamodb.AttributeValue{
+		"ID": dynamodb.AttributeValue{
+			S: aws.String(workstatus.ID),
+		},
+		"Content": dynamodb.AttributeValue{
+			S: aws.String(string(content)),
 		},
 	}
+
+	input := &dynamodb.PutItemInput{
+		TableName: aws.String(TABLE_NAME),
+		Item:      item,
+	}
+
 	req := dg.db.PutItemRequest(input)
 
-	_, err := req.Send(ctx)
+	_, err = req.Send(ctx)
 	if err != nil {
 		return err
 	}
