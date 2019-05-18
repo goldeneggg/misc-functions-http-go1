@@ -80,9 +80,16 @@ func (dg *DynamoGateway) describeTable(ctx context.Context) (*entity.DescWorksta
 		return nil, err
 	}
 
-	// TODO other columns setting
+	var attrs []string
+	for _, attr := range out.Table.AttributeDefinitions {
+		attrs = append(attrs, attr.GoString())
+	}
+	status, _ := out.Table.TableStatus.MarshalValue()
+
 	desc := &entity.DescWorkstatus{
 		TableName: aws.StringValue(out.Table.TableName),
+		Attrs:     attrs,
+		Status:    status,
 	}
 
 	return desc, nil
@@ -99,11 +106,7 @@ func (dg *DynamoGateway) listTables(ctx context.Context) (*entity.DescWorkstatus
 	}
 
 	// TODO other columns setting
-	desc := &entity.DescWorkstatus{
-		TableName: "dummy tableName",
-		Attrs:     "dummy attrs",
-		Status:    "dummy status",
-	}
+	desc := &entity.DescWorkstatus{}
 
 	return desc, nil
 }

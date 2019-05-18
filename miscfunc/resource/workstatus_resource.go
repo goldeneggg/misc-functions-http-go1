@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-lambda-go/events"
 
@@ -32,13 +31,11 @@ func (ws *Workstatus) Get(ctx context.Context, proxyReq events.APIGatewayProxyRe
 	switch v {
 	case "desc":
 		desc, err := ctrl.Desc(ctx)
-		log.Printf("@@@ desc: %#v\n", desc)
 		if err != nil {
 			return NewResult(err.Error(), 500), err
 		}
 
 		b, err := json.Marshal(desc)
-		log.Printf("@@@ string(b): %v\n", string(b))
 		if err != nil {
 			return NewResult(err.Error(), 500), err
 		}

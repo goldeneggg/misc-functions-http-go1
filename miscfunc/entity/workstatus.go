@@ -7,7 +7,7 @@ type Workstatus struct {
 }
 
 type DescWorkstatus struct {
-	TableName string `json:"table_name"`
-	Attrs     string `json:"attrs"`
-	Status    string `json:"status"`
+	TableName string   `json:"table_name"`
+	Attrs     []string `json:"attrs"`
+	Status    string   `json:"status"`
 }
