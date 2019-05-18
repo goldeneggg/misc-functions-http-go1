@@ -69,7 +69,7 @@ api-samdev: build cp-tmpl-local
 
 # Note: must execute run-local-dynamo target before start-api
 api-samdev-with-localdynamo: build cp-tmpl-local
-	@sam local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT) --docker-network $(DOCKER_LOCAL_DYNAMO_NETWORK)
+	@samdev local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT) --docker-network $(DOCKER_LOCAL_DYNAMO_NETWORK)
 
 curl-get:
 	@curl -XGET http://127.0.0.1:$(API_PORT)$(API_PATH)
