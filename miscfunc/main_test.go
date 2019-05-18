@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/goldeneggg/misc-functions-http-go1/hello-world/resource"
+	"github.com/goldeneggg/misc-functions-http-go1/miscfunc/resource"
 )
 
 var helloRequest = events.APIGatewayProxyRequest{

@@ -1,0 +1,6 @@
+{
+  "MiscGoAPIFunction": {
+    "DYNAMO_TABLE_NAME": "localtable",
+    "USE_LOCAL_DYNAMO": "true"
+  }
+}

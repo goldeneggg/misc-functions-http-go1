@@ -1,13 +1,21 @@
 PROJECT := misc-functions-http-go1
-CODE := hello-world
+CODE := miscfunc
 API_PATH := /hello
 FUNC_NAME := MyGoAPIFunction
+
+PKG_AWS_LAMBDA_GO := github.com/aws/aws-lambda-go
+PKG_AWS_SDK_GO_V2 := github.com/aws/aws-sdk-go-v2
 
 MAIN_GO := ./$(CODE)/main.go
 CLIENT_GO := ./$(CODE)/client.go
 EXE := ./$(CODE)/$(CODE)
+LOCAL_ENVS := ./localenvs.json
 LOCAL_EVENT := ./.event.json
 API_PORT := 3999
+DOCKER_LOCAL_DYNAMO_NAME := localdynamo
+DOCKER_LOCAL_DYNAMO_NETWORK := sam-dynamo-network
+TESTDATA_CREATE_TABLE := testdata/skel-workstatus-create-table.json
+TESTDATA_DATA := testdata/data.json
 TOOL_DIR := bin
 PKG_DLV := github.com/go-delve/delve/cmd/dlv
 DLV := $(TOOL_DIR)/dlv
@@ -25,7 +33,7 @@ TARGET_PKGS = $(shell go list ./... | \grep -v 'vendor')
 .DEFAULT_GOAL := build
 
 .PHONY: deps
-deps:
+setup-deps:
 	@go get github.com/aws/aws-lambda-go/...@latest
 
 .PHONY: build
@@ -45,24 +53,80 @@ rebuild: clean build
 #
 ###############################
 
-
 ###
-# for local development
+# for local API Gateway development
 ###
-mod-dl:
-	@GO111MODULE=on go mod download
-
-$(LOCAL_TEMPLATE):
+cp-tmpl-local:
 	@[ -f $(LOCAL_TEMPLATE) ] && rm $(LOCAL_TEMPLATE);  cp template.yaml $(LOCAL_TEMPLATE)
 
-api: build $(LOCAL_TEMPLATE)
-	@sam local start-api -t $(LOCAL_TEMPLATE) -p $(API_PORT)
+api: build cp-tmpl-local
+	@sam local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT)
+
+# Note: must execute up-dynamo target before start-api
+api-with-localdynamo: build cp-tmpl-local
+	@sam local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT) --docker-network $(DOCKER_LOCAL_DYNAMO_NETWORK)
+
+api-samdev: build cp-tmpl-local
+	@samdev local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT)
+
+# Note: must execute run-local-dynamo target before start-api
+api-samdev-with-localdynamo: build cp-tmpl-local
+	@samdev local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT) --docker-network $(DOCKER_LOCAL_DYNAMO_NETWORK)
 
 curl-get:
 	@curl -XGET http://127.0.0.1:$(API_PORT)$(API_PATH)
 
-gen-event:
+curl-get-workstatus-desc:
+	@curl -XGET "http://127.0.0.1:$(API_PORT)/workstatus?type=desc"
+
+curl-post-workstatus:
+	@curl -XPOST -d @$(TESTDATA_DATA) "http://127.0.0.1:$(API_PORT)/workstatus" 
+
+setup-local-event:
 	@sam local generate-event apigateway aws-proxy > $(LOCAL_EVENT)
+
+###
+# for local DynamoDB
+###
+
+# See:
+# - https://docs.aws.amazon.com/ja_jp/amazondynamodb/latest/developerguide/DynamoDBLocal.html
+# - https://github.com/aws-samples/aws-sam-java-rest
+
+_pull-dynamo:
+	@docker pull amazon/dynamodb-local
+
+_create-docker-network-for-dynamo:
+	@docker network create $(DOCKER_LOCAL_DYNAMO_NETWORK)
+
+setup-dynamo-docker: _pull-dynamo _create-docker-network-for-dynamo
+
+setup-dynamo-workstatus-table-skelton:
+	@aws dynamodb create-table --generate-cli-skeleton > $(TESTDATA_CREATE_TABLE)
+
+up-dynamo: _run-dynamo _create-workstatus-table
+
+_run-dynamo:
+	@docker run -d --rm -p 8000:8000 --name $(DOCKER_LOCAL_DYNAMO_NAME) --network $(DOCKER_LOCAL_DYNAMO_NETWORK) amazon/dynamodb-local
+
+_create-workstatus-table:
+	@aws dynamodb create-table --cli-input-json file://$(TESTDATA_CREATE_TABLE) --endpoint-url http://localhost:8000
+
+down-dynamo:
+	@docker stop $(DOCKER_LOCAL_DYNAMO_NAME)
+
+delete-workstatus-table:
+	@aws dynamodb delete-table --table-name workstatus --endpoint-url http://localhost:8000
+
+scan-table:
+	@aws dynamodb scan --table-name workstatus --endpoint-url http://localhost:8000
+
+list-table:
+	@aws dynamodb list-tables --endpoint-url http://localhost:8000
+
+desc-table:
+	@aws dynamodb describe-table --table-name workstatus --endpoint-url http://localhost:8000
+
 
 ###
 # for local debug
@@ -75,8 +139,11 @@ debug-build:
 
 # See: https://github.com/awslabs/aws-sam-cli/issues/1067#issuecomment-489406846
 # 最新のsam＆delve＆lambciの組み合わせだと動かない
-debug-api: debug-build $(LOCAL_TEMPLATE)
+debug-api: build-dlv debug-build cp-tmpl-local
 	@sam local start-api -t $(LOCAL_TEMPLATE) -p $(API_PORT) -d $(DEBUG_PORT) --debugger-path $(TOOL_DIR) --debug-args="-delveAPI=2" --debug
+
+debug-api-samdev: build-dlv debug-build cp-tmpl-local
+	@samdev local start-api -t $(LOCAL_TEMPLATE) -p $(API_PORT) -d $(DEBUG_PORT) --debugger-path $(TOOL_DIR) --debug-args="-delveAPI=2" --debug
 
 ###
 # for test
@@ -106,7 +173,7 @@ package: build
 # require "AWS_KMS_KEY_ID" env
 # @sam deploy --template-file $(OUTPUT_TEMPLATE) --stack-name $(NAME)-stack --capabilities CAPABILITY_IAM --parameter-overrides KeyIdParameter=$$AWS_KMS_KEY_ID
 deploy: package
-	@sam deploy --template-file $(OUTPUT_TEMPLATE) --stack-name $(PROJECT)-stack --capabilities CAPABILITY_IAM
+	@sam deploy --template-file $(OUTPUT_TEMPLATE) --stack-name $(PROJECT)-stack --capabilities CAPABILITY_IAM --parameter-overrides KeyIdParameter=$$AWS_KMS_KEY_ID
 
 delete-stack:
 	@aws cloudformation delete-stack --stack-name $(PROJECT)-stack
@@ -117,6 +184,9 @@ show-api-url:
 ###
 # for manage go modules
 ###
+mod-dl:
+	@GO111MODULE=on go mod download
+
 mod-tidy:
 	@GO111MODULE=on go mod tidy -v
 
@@ -133,8 +203,34 @@ vendor-build:
 vendor-debug-build:
 	@GOOS=linux GOARCH=amd64 go build -gcflags='-N -l' -o $(EXE) -mod vendor $(MAIN_GO)
 
+chk_versions = go list -u -m -versions $1 | tr ' ' '\n'
 
-# DEPRECATE as follows
+chk-versions-aws-lambda-go:
+	@$(call chk_versions,$(PKG_AWS_LAMBDA_GO))
+
+chk-versions-aws-sdk-go-v2:
+	@$(call chk_versions,$(PKG_AWS_SDK_GO_V2))
+
+###
+# for add new feature
+###
+
+# See: https://hackernoon.com/golang-clean-archithecture-efd6d7c43047
+new-ca:
+	@read -p 'Input new domain name?: ' name; \
+		mkdir -p $(CODE)/entity && touch $(CODE)/entity/$$name.go && \
+		mkdir -p $(CODE)/$$name/{delivery,repository,usecase} && \
+		touch $(CODE)/$$name/repository.go $(CODE)/$$name/usecase.go $(CODE)/$$name/repository/.gitkeep $(CODE)/$$name/usecase/.gitkeep $(CODE)/$$name/delivery/.gitkeep
+
+# original version
+new-domain:
+	@read -p 'Input new domain name?: ' name; \
+		mkdir -p $(CODE)/entity && touch $(CODE)/entity/$$name.go && \
+		mkdir -p $(CODE)/$$name/{usecase,adapter/{controller,gateway},infra} && \
+		touch $(CODE)/$$name/usecase.go $(CODE)/$$name/adapter/controller.go $(CODE)/$$name/adapter/gateway.go && \
+		touch $(CODE)/$$name/usecase/.gitkeep $(CODE)/$$name/adapter/controller/.gitkeep $(CODE)/$$name/adapter/gateway/.gitkeep $(CODE)/$$name/infra/.gitkeep
+
+# DEPRECATEs as follows
 
 ###
 # for manage apigateway

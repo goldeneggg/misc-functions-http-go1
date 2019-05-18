@@ -1,0 +1,27 @@
+{
+    "AttributeDefinitions": [
+        {
+            "AttributeName": "ID",
+            "AttributeType": "S"
+        },
+        {
+            "AttributeName": "Content",
+            "AttributeType": "S"
+        }
+    ],
+    "TableName": "localtable",
+    "KeySchema": [
+        {
+            "AttributeName": "ID",
+            "KeyType": "HASH"
+        },
+        {
+            "AttributeName": "Content",
+            "KeyType": "RANGE"
+        }
+    ],
+    "ProvisionedThroughput": {
+        "ReadCapacityUnits": 2,
+        "WriteCapacityUnits": 2
+    }
+}

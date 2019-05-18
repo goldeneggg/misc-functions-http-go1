@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/aws/aws-lambda-go/events"
 )
 
 var (
@@ -19,7 +21,7 @@ var (
 type Hello struct {
 }
 
-func (hello *Hello) Get(ctx context.Context, p *Params) (*Result, error) {
+func (hello *Hello) Get(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	r, err := http.Get(HelloDefaultHTTPGetAddress)
 	if err != nil {
 		return NewResultWithErrorAndStatus(err, 500)
@@ -41,17 +43,21 @@ func (hello *Hello) Get(ctx context.Context, p *Params) (*Result, error) {
 	return NewResult(fmt.Sprintf("Hello, %v", string(ip)), 200), nil
 }
 
-func (hello *Hello) Post(ctx context.Context, p *Params) (*Result, error) {
+func (hello *Hello) Post(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	// TODO
 	return NewResultWithErrorAndStatus(errNotImplemented, 400)
 }
 
-func (hello *Hello) Put(ctx context.Context, p *Params) (*Result, error) {
+func (hello *Hello) Put(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	// TODO
 	return NewResultWithErrorAndStatus(errNotImplemented, 400)
 }
 
-func (hello *Hello) Delete(ctx context.Context, p *Params) (*Result, error) {
+func (hello *Hello) Delete(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	// TODO
 	return NewResultWithErrorAndStatus(errNotImplemented, 400)
+}
+
+func newHelloResource(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (*Hello, error) {
+	return &Hello{}, nil
 }
