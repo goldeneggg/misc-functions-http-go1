@@ -20,6 +20,7 @@ const (
 	LOCAL_DYNAMO_PORT           = 8000
 )
 
+// DynamoGateway is adapter to DynamoDB workstatus table
 type DynamoGateway struct {
 	db *dynamodb.DynamoDB
 }
