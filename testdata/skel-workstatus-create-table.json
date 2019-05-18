@@ -9,7 +9,7 @@
             "AttributeType": "S"
         }
     ],
-    "TableName": "workstatus",
+    "TableName": "localtable",
     "KeySchema": [
         {
             "AttributeName": "ID",

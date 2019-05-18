@@ -5,23 +5,34 @@ Description: 'misc-functions-http-go1
   Sample SAM Template for misc-functions-http-go1
 
   '
+Parameters:
+  KeyIdParameter:
+    Type: String
 Globals:
   Function:
-    Timeout: 15
+    Timeout: 10
+    Environment:
+      Variables:
+        KMS_REGION: ap-northeast-1
 Resources:
   MiscGoAPIFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://jpshadowapps-lambdas/misc-functions-http-go1/a4c41387db1a5f02512cee29f0557b77
+      CodeUri: s3://jpshadowapps-lambdas/misc-functions-http-go1/ff42d61397c2f24a8d2ad8d3c56aa77b
       Handler: miscfunc
       Runtime: go1.x
       Tracing: Active
       Policies:
+      - KMSDecryptPolicy:
+          KeyId:
+            Ref: KeyIdParameter
       - DynamoDBCrudPolicy:
           TableName:
             Ref: WorkstatusDynamoDBTable
       Environment:
         Variables:
+          DYNAMO_TABLE_NAME:
+            Ref: WorkstatusDynamoDBTable
           USE_LOCAL_DYNAMO: 'false'
       Events:
         GetHello:

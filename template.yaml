@@ -6,9 +6,9 @@ Description: >
   Sample SAM Template for misc-functions-http-go1
 
 # See: https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html
-# Parameters:
-#   KeyIdParameter:
-#     Type: String
+Parameters:
+  KeyIdParameter:
+    Type: String
 
 # See: https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/mappings-section-structure.html
 # Mappings:
@@ -16,33 +16,15 @@ Description: >
 #     hoge1:
 #       hoge1key1: "hoge1value1"
 
-# See: https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/pseudo-parameter-reference.html
-# 擬似パラメータはAWS CloudFormation によって事前定義されたパラメータ、Sub関数やRef関数で参照可能
-# - AWS::Region - us-west-2 など、包括的なリソースが作成されている AWS リージョンを表す文字列を返します。
-# - etc...
-
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 15
-#     Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
-#       Variables:
-#         HOGE_TOKEN: "HUGA"
-#         KMS_REGION: ap-northeast-1
+    Timeout: 10
+    Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+      Variables:
+        KMS_REGION: ap-northeast-1
 
 Resources:
-  # MiscGoAPIFunctionRole:
-  #   Type: "AWS::IAM::Role"
-  #   Properties:
-  #    AssumeRolePolicyDocument:
-  #       Statement:
-  #       - Action: ['sts:AssumeRole']
-  #         Effect: Allow
-  #         Principal:
-  #           Service: ['lambda.amazonaws.com']
-  #       Version: '2012-10-17'
-  #    Path: /
-  #    Policies:
   MiscGoAPIFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -51,35 +33,37 @@ Resources:
       Runtime: go1.x
       Tracing: Active # https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html
       Policies: # More info: https://github.com/awslabs/serverless-application-model/blob/master/examples/2016-10-31/policy_templates/all_policy_templates.yaml
+        - KMSDecryptPolicy:
+            KeyId: !Ref KeyIdParameter
         - DynamoDBCrudPolicy:
             TableName: !Ref WorkstatusDynamoDBTable
-      #   - KMSDecryptPolicy:
-      #       KeyId: !Ref KeyIdParameter
-      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+      Environment:
         Variables:
+          DYNAMO_TABLE_NAME: !Ref WorkstatusDynamoDBTable
           USE_LOCAL_DYNAMO: "false"
       Events:
         GetHello:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: Api
           Properties:
             Path: /hello
             Method: GET
         PostWorkstatus:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: Api
           Properties:
             Path: /workstatus
             Method: POST
         DescWorkstatus:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: Api
           Properties:
             Path: /workstatus
             Method: GET
         GetCrawler:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: Api
           Properties:
             Path: /crawler
             Method: GET
   WorkstatusDynamoDBTable:
+    # See: https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/aws-resource-dynamodb-table.html
     Type: 'AWS::DynamoDB::Table'
     Properties:
       AttributeDefinitions:
@@ -98,18 +82,12 @@ Resources:
 
 # See: https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html
 Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   MiscGoAPI:
     Description: "API Gateway endpoint URL for Prod environment for First Function"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
   MiscGoAPIFunction:
     Description: "First Lambda Function ARN"
     Value: !GetAtt MiscGoAPIFunction.Arn
-  # MiscGoAPIFunctionIamRole:
-  #   Description: "Implicit IAM Role created for Hello World function"
-  #   Value: !GetAtt MiscGoAPIFunctionRole.Arn
   WorkstatusDynamoDBTable:
     Description: "Workstatus DynamoDB Table"
     Value: !GetAtt WorkstatusDynamoDBTable.Arn

@@ -15,8 +15,6 @@ import (
 )
 
 const (
-	TABLE_NAME = "workstatus"
-
 	LOCAL_DYNAMO_CONTAINER_NAME = "localdynamo"
 	LOCAL_DYNAMO_PORT           = 8000
 )
@@ -59,7 +57,7 @@ func (dg *DynamoGateway) Create(ctx context.Context, workstatus *entity.Workstat
 	}
 
 	input := &dynamodb.PutItemInput{
-		TableName: aws.String(TABLE_NAME),
+		TableName: aws.String(os.Getenv("DYNAMO_TABLE_NAME")),
 		Item:      item,
 	}
 
@@ -80,7 +78,7 @@ func (dg *DynamoGateway) Desc(ctx context.Context) (*entity.DescWorkstatus, erro
 func (dg *DynamoGateway) describeTable(ctx context.Context) (*entity.DescWorkstatus, error) {
 	// Build the request with its input parameters
 	req := dg.db.DescribeTableRequest(&dynamodb.DescribeTableInput{
-		TableName: aws.String("workstatus"),
+		TableName: aws.String(os.Getenv("DYNAMO_TABLE_NAME")),
 	})
 
 	// Send the request, and get the response or error back

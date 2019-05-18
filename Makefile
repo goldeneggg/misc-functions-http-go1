@@ -62,7 +62,7 @@ cp-tmpl-local:
 api: build cp-tmpl-local
 	@sam local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT)
 
-# Note: must execute run-local-dynamo target before start-api
+# Note: must execute up-dynamo target before start-api
 api-with-localdynamo: build cp-tmpl-local
 	@sam local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT) --docker-network $(DOCKER_LOCAL_DYNAMO_NETWORK)
 
@@ -173,7 +173,7 @@ package: build
 # require "AWS_KMS_KEY_ID" env
 # @sam deploy --template-file $(OUTPUT_TEMPLATE) --stack-name $(NAME)-stack --capabilities CAPABILITY_IAM --parameter-overrides KeyIdParameter=$$AWS_KMS_KEY_ID
 deploy: package
-	@sam deploy --template-file $(OUTPUT_TEMPLATE) --stack-name $(PROJECT)-stack --capabilities CAPABILITY_IAM
+	@sam deploy --template-file $(OUTPUT_TEMPLATE) --stack-name $(PROJECT)-stack --capabilities CAPABILITY_IAM --parameter-overrides KeyIdParameter=$$AWS_KMS_KEY_ID
 
 delete-stack:
 	@aws cloudformation delete-stack --stack-name $(PROJECT)-stack
