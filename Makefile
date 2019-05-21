@@ -116,10 +116,10 @@ down-dynamo:
 	@docker stop $(DOCKER_LOCAL_DYNAMO_NAME)
 
 delete-workstatus-table:
-	@aws dynamodb delete-table --table-name workstatus --endpoint-url http://localhost:8000
+	@aws dynamodb delete-table --table-name localtable --endpoint-url http://localhost:8000
 
 scan-table:
-	@aws dynamodb scan --table-name workstatus --endpoint-url http://localhost:8000
+	@aws dynamodb scan --table-name localtable --endpoint-url http://localhost:8000
 
 list-table:
 	@aws dynamodb list-tables --endpoint-url http://localhost:8000
