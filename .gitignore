@@ -4,3 +4,4 @@ miscfunc/miscfunc
 template.local.yaml
 bin/
 vendor/
+serverless-output.yaml
