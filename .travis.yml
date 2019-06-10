@@ -18,6 +18,10 @@ env:
 install:
   - echo $TRAVIS_GO_VERSION
   - make mod-dl
+  - python --version
+  - pip --version
+  - pip install --upgrade pip
+  - pip --version
   - pip install --user awscli
   - pip install --user aws-sam-cli
 
