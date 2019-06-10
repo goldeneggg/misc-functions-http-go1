@@ -159,6 +159,9 @@ ci: test
 lint:
 	@golint -set_exit_status $(TARGET_PKGS)
 
+lint-travis:
+	@travis lint --org --debug .travis.yml
+
 ###
 # for package and deploy
 ###

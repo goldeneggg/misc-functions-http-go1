@@ -11,14 +11,27 @@ matrix:
 sudo: false
 
 env:
+  global:
+  - AWS_DEFAULT_REGION=ap-northeast-1
   - GO111MODULE=on
 
 install:
   - echo $TRAVIS_GO_VERSION
   - make mod-dl
+  - pip install --user awscli
+  - pip install --user aws-sam-cli
 
 script:
   - make ci
+  - make validate
+  - make package
+
+deploy:
+  provider: script
+  script: make deploy
+  skip_cleanup: true
+  on:
+    branch: master
 
 notifications:
   email:
