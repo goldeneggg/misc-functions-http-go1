@@ -2,6 +2,11 @@
 
 set -eu
 
+BIN=./miscfunc/miscfunc
+MAIN_GO=./miscfunc/main.go
+
+GOOS=linux GOARCH=amd64 go build -o ${BIN} ${MAIN_GO}
+
 TEMPLATE=./template.yaml
 OUTPUT_TEMPLATE=./serverless-output.yaml
 S3_BUCKET=jpshadowapps-lambdas

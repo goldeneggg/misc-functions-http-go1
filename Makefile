@@ -159,6 +159,10 @@ ci: test
 lint:
 	@golint -set_exit_status $(TARGET_PKGS)
 
+.PHONY: vet
+vet:
+	@go vet $(TARGET_PKGS)
+
 lint-travis:
 	@travis lint --org --debug .travis.yml
 

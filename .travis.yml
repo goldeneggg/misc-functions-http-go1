@@ -26,6 +26,7 @@ install:
 
 script:
   - go test -race ./miscfunc/...
+  - make vet
   - make validate
 
 deploy:
