@@ -8,23 +8,28 @@ go:
 sudo: false
 
 env:
-  - GO111MODULE=on
+  matrix:
+    - GO111MODULE=on
+  global:
+    - AWS_DEFAULT_REGION=ap-northeast-1
+    - secure: SwamL5uqGL3EYvVgxP11yLzadQMiz1FK+Wcz78jDJco5Q88FvSrW2mDsR1LKlc2nB8sgEuZ9kxtmhJu8BkHX6hGF6v7Rtk64/Ceu5nr41uXN7WvanefELSgahCMrafPVcRZC3gW0fGjDoOI/2eSn3u4lUdZOlipo65H4tfZD/aj6UVkSWiIHEQvirGoEJZdqt0spL+18NqpnpmKYWhF0F4GTwispbWzpI9kSNaWPNuGn4kHBqwE3EfOSQZUCofU/Qsqd14KhCyZOF9tSix5VVEZfjtIFVgOIJLWzS+t1Dl2y/iZvqKAf/iguvehOKps9zrlY3PcR7bmyFDfZ0h43DybCkhHLFaAgjpzuMmRfGIc8eagw+lDgRCiVAT1sXRk8ubllJDErvmrs+6qcEnbGZgtLgc//iDQriEggDUrrqjRTP32hjzLkM7IQugMUMBOIluHVZ68vhFvyo05vqP5LpbbvAQMoKQA40WPKzkTisFt9uuuDNaaPfxX7iMLwGxjLbRtMD71PztBZ78MK+E2gSRe5nylvEWAPU1Kkvl1GqRYx43TCayerWe7xtVukuNSiwftnOS76lWjpr9oLysqzWo+wrz8pZBqwjN4i6E3uDqWD/+FBARCX43G9DepB7n6aqqH04Rmxxs6fN1cdaHhCT0a/7RFaExXUbufkwEIDLeI=
+    - secure: xEkfqPIcI5Hvm5KoMIPgc6s0FPeDcDGOhhtehVIx05LjFUeDgFm5p6VqDaSVUs6w7hu8spp0ID3bMaeCHc/GvB29ahdxRzd3C/PN7oITdekRtWeEGwxckM0UMndVQ0ToPqW4PYFjzWE7JBqJXOC5cdiJwG57LECyfMh4qfXe5vs7BFtNC1XL2dr8OI6acmIQKwTMjqI7/snzEVm76CyKAerwAjH13NOkJWk45A5MH8wbeyT0brbZwBCQSlQfh/vmJp/xYwm+OqFs0XK4tGtGa1zJpJJRwekQCQxy3nw5pvvE+/MPDYN8p0eDcMMOw7tEErhH1BZjbEW/j/x6RmsLnq+OI4dxoKkdiVc6SQqsWEatfpBTuZ783YqJGEdqLJ2yx2dkHmYg0An8L3ATX3JnkfCL1RJZwXB3LjZAmIe02E7CNMgHiy887wxHvtxCZ/HihmVgle8xGpjwn0JN6EThEXDJu5V6Et0lH1B58pttn1Jxenyx60T0blHhDUq7fkWvxtZhotpx5USihroAw6NJqQx+yXsv/7049aevjktEKGE47xIE3gIQ4sTmUaTD/lollINCWpuk7mw4PWfptK68YDEhzC/tkTefBHi78Cy58IWm+Eo6zoumn1pxwB5BC86LbBcZtCNGh+wJwlrBqxTPLwZGJ2ldPvCTUI45ob5cCZA=
 
 install:
   - echo $TRAVIS_GO_VERSION
-  - make mod-dl
+  - go mod download
   - python --version
   - pip --version
   - pip install --user awscli
   - pip install --user aws-sam-cli
 
 script:
-  - make ci
-  - make validate
+  - go test -race ./miscfunc/...
+  - sam validate
 
 deploy:
   provider: script
-  script: make deploy
+  script: "./scripts/deploy.sh"
   skip_cleanup: true
   on:
     branch: master
