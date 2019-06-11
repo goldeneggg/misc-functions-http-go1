@@ -25,14 +25,11 @@ install:
   - pip install --user aws-sam-cli
 
 script:
-  - go test -race ./miscfunc/...
-  - make vet
-  - make validate
+  - make ci
 
 deploy:
   provider: script
-  #script: "make deploy"
-  script: "./deploy.sh"
+  script: "make deploy"
   skip_cleanup: true
   on:
     branch: master

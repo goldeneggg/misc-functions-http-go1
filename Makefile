@@ -152,9 +152,6 @@ debug-api-samdev: build-dlv debug-build cp-tmpl-local
 test:
 	@go test -race ./$(CODE)/...
 
-.PHONY: ci
-ci: test
-
 .PHONY: lint
 lint:
 	@golint -set_exit_status $(TARGET_PKGS)
@@ -162,9 +159,6 @@ lint:
 .PHONY: vet
 vet:
 	@go vet $(TARGET_PKGS)
-
-lint-travis:
-	@travis lint --org --debug .travis.yml
 
 ###
 # for package and deploy
@@ -182,11 +176,23 @@ package: build
 deploy: package
 	@sam deploy --template-file $(OUTPUT_TEMPLATE) --stack-name $(PROJECT)-stack --capabilities CAPABILITY_IAM --parameter-overrides KeyIdParameter=$$AWS_KMS_KEY_ID
 
+describe-stack-latest-event:
+	@aws cloudformation describe-stack-events --stack-name $(PROJECT)-stack --max-items 1
+
 delete-stack:
 	@aws cloudformation delete-stack --stack-name $(PROJECT)-stack
 
 show-api-url:
 	@aws cloudformation describe-stacks --stack-name $(PROJECT)-stack | \grep 'execute-api' | sed -e 's/"OutputValue": //g' | tr -d ',' | tr -d '"' | tr -d ' '
+
+###
+# for CI
+###
+.PHONY: ci
+ci: test vet validate
+
+lint-travis:
+	@travis lint --org --debug .travis.yml
 
 ###
 # for manage go modules
