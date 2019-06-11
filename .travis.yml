@@ -18,7 +18,7 @@ env:
 
 install:
   - echo $TRAVIS_GO_VERSION
-  - go mod download
+  - make mod-dl
   - python --version
   - pip --version
   - pip install --user awscli
@@ -26,11 +26,12 @@ install:
 
 script:
   - go test -race ./miscfunc/...
-  - sam validate
+  - make validate
 
 deploy:
   provider: script
-  script: "./scripts/deploy.sh"
+  #script: "make deploy"
+  script: "./deploy.sh"
   skip_cleanup: true
   on:
     branch: master
