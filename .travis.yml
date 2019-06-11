@@ -22,7 +22,9 @@ install:
   - python --version
   - pip --version
   - pip install --user awscli
+  - aws --version
   - pip install --user aws-sam-cli
+  - sam --version
 
 script:
   - make ci
