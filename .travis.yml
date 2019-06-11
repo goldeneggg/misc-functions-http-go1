@@ -21,7 +21,6 @@ install:
 script:
   - make ci
   - make validate
-  - make package
 
 deploy:
   provider: script
