@@ -16,14 +16,16 @@ func main() {
 	log.Printf("---------- Args: %#v\n", os.Args)
 	log.Printf("---------- Envs: %#v\n", os.Environ())
 	lambda.Start(handler)
+	log.Println("---------- END main")
 }
 
-func handler(ctx context.Context, proxyReq events.APIGatewayProxyRequest) (proxyResp events.APIGatewayProxyResponse, err error) {
+func handler(ctx context.Context, req events.APIGatewayProxyRequest) (resp events.APIGatewayProxyResponse, err error) {
 	log.Printf("----- Context: %#v\n", ctx)
-	log.Printf("----- ProxyRequest: %#v\n", proxyReq)
+	log.Printf("----- ProxyRequest: %#v\n", req)
 
-	proxyResp, err = resource.Access(ctx, proxyReq)
-	log.Printf("----- ProxyResponse: %#v\n", proxyResp)
+	resp, err = resource.Access(ctx, req)
+	log.Printf("----- ProxyResponse: %#v\n", resp)
+	log.Printf("----- err: %v\n", err)
 
 	return
 }
