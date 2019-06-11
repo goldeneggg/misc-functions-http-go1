@@ -2,10 +2,9 @@
 
 set -eu
 
-BIN=./miscfunc/miscfunc
-MAIN_GO=./miscfunc/main.go
-
-GOOS=linux GOARCH=amd64 go build -o ${BIN} ${MAIN_GO}
+CODE_URI=miscfunc/
+HANDLER=miscfunc
+GOOS=linux GOARCH=amd64 go build -o ${CODE_URI}${HANDLER} ${CODE_URI}main.go
 
 TEMPLATE=./template.yaml
 OUTPUT_TEMPLATE=./serverless-output.yaml
