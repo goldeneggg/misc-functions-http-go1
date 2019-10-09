@@ -21,7 +21,7 @@ const (
 
 // DynamoGateway is adapter to DynamoDB workstatus table
 type DynamoGateway struct {
-	db *dynamodb.DynamoDB
+	db *dynamodb.Client
 }
 
 func NewDynamoGateway() (adapter.Gateway, error) {
@@ -89,7 +89,7 @@ func (dg *DynamoGateway) describeTable(ctx context.Context) (*entity.DescWorksta
 
 	var attrs []string
 	for _, attr := range out.Table.AttributeDefinitions {
-		attrs = append(attrs, attr.GoString())
+		attrs = append(attrs, attr.String())
 	}
 	status, _ := out.Table.TableStatus.MarshalValue()
 

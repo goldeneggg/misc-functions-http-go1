@@ -1,188 +1,181 @@
 # misc-functions-http-go1
 
-This is a sample template for misc-functions-http-go1 - Below is a brief explanation of what we have generated for you:
-
-```bash
-.
-├── Makefile                    <-- Make to automate build
-├── README.md                   <-- This instructions file
-├── miscfunc                 <-- Source code for a lambda function
-│   ├── main.go                 <-- Lambda function code
-│   └── main_test.go            <-- Unit tests
-└── template.yaml
-```
-
-
 ## Requirements
-
-* AWS CLI already configured with Administrator permission
 * [Docker installed](https://www.docker.com/community-edition)
 * [Golang](https://golang.org)
+* AWS CLI already configured with Administrator permission
+  * If using OS X and homebrew, run `brew install awscli`
+* aws-sam-cli already configured with Administrator permission
+  * If using OS X and homebrew, run `brew install aws-sam-cli`
 
 ## Setup process
 
-### Installing dependencies
-
-In this example we use the built-in `go get` and the only dependency we need is AWS Lambda Go SDK:
-
-```shell
-go get -u github.com/aws/aws-lambda-go/...
+```sh
+# setup
+$ git clone THIS_REPOS
+$ cd THIS_REPOS
+$ make mod-dl
 ```
 
-**NOTE:** As you change your application code as well as dependencies during development, you might want to research how to handle dependencies in Golang at scale.
-
-### Building
-
-Golang is a statically compiled language, meaning that in order to run it you have to build the executable target.
-
-You can issue the following command in a shell to build it:
-
-```shell
-GOOS=linux GOARCH=amd64 go build -o miscfunc/miscfunc ./miscfunc
-```
-
-**NOTE**: If you're not building the function on a Linux machine, you will need to specify the `GOOS` and `GOARCH` environment variables, this allows Golang to build your function for another system architecture and ensure compatibility.
-
-### Local development
+## Local development
 
 **Invoking function locally through local API Gateway**
+See: miscfunc/resource/hello_resource.go
 
-```bash
-sam local start-api
+```sh
+# run API on local
+$ make api
+
+# confirm API (See: main.go and miscfunc/resource/hello_resource.go)
+$ make curl-get-hello
+Hello, 111.108.8.42
+
+# stop API
+(press ctrl + c)
 ```
 
-If the previous command ran successfully you should now be able to hit the following local endpoint to invoke your function `http://localhost:3000/hello`
+### With Local DynamoDB
+See: miscfunc/resource/workstatus_resource.go
 
-**SAM CLI** is used to emulate both Lambda and API Gateway locally and uses our `template.yaml` to understand how to bootstrap this environment (runtime, where the source code is, etc.) - The following excerpt is what the CLI will read in order to initialize an API and its routes:
+Setup local DynamoDB environment (only once)
 
-```yaml
-...
-Events:
-    HelloWorld:
-        Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-        Properties:
-            Path: /hello
-            Method: get
+```sh
+$ make setup-dynamo-docker
+```
+
+Run local DynanoDB container  __Notice: This feature uses port 8000.__
+
+```sh
+$ make up-dynamo
+
+# confirm running container
+$ docker ps
+CONTAINER ID        IMAGE                   COMMAND                  CREATED             STATUS              PORTS                    NAMES
+XXXXXXXXXXXX        amazon/dynamodb-local   "java -jar DynamoDBL…"   43 seconds ago      Up 40 seconds       0.0.0.0:8000->8000/tcp   localdynamo
+```
+
+Invoke function with local DynamoDB
+
+```sh
+# run API on local with DynamoDB
+$ make api-with-localdynamo
+
+# get table describe from local DynamoDB table
+$ make curl-get-workstatus-desc
+{"table_name":"localtable","attrs":["{\n  AttributeName: \"ID\",\n  AttributeType: S\n}","{\n  AttributeName: \"Content\",\n  AttributeType: S\n}"],"status":"ACTIVE"}%
+
+# post testdata to local DynamoDB table
+$ make curl-post-workstatus
+no data
+
+# confirm posted testdata from local DynamoDB table
+$ make scan-table
+{
+    "Items": [
+        {
+            "Content": {
+                "S": "{\"ym\":201906,\"buffer_days_per_week\":1,\"desc\":\"テスト説明文\"}"
+            },
+            "ID": {
+                "S": "1"
+            }
+        }
+    ],
+    "Count": 1,
+    "ScannedCount": 1,
+    "ConsumedCapacity": null
+}
+
+# stop API
+(press ctrl + c)
+
+# stop DynamoDB container
+$ make down-dynamo
+```
+
+### Write and Run tests
+
+```sh
+$ make test
+
+# Run golint
+$ make lint
+
+# Run go vet
+$ make vet
 ```
 
 ## Packaging and deployment
 
-AWS Lambda Python runtime requires a flat folder with all dependencies including the application. SAM will use `CodeUri` property to know where to look up for both application and dependencies:
+### Edit and Validate template.yaml
+Write or Modify template.yaml
 
-```yaml
-...
-    FirstFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            CodeUri: hello_world/
-            ...
+```sh
+$ vim template.yaml
 ```
 
-First and foremost, we need a `S3 bucket` where we can upload our Lambda functions packaged as ZIP before we deploy anything - If you don't have a S3 bucket to store code artifacts then this is a good time to create one:
+Validate template.yaml
 
-```bash
-aws s3 mb s3://BUCKET_NAME
+```sh
+$ make validate
+/Users/xxx/misc-functions-http-go1/template.yaml is a valid SAM Template
 ```
 
-Next, run the following command to package our Lambda function to S3:
+### Deploy to NOT production
 
-```bash
-sam package \
-    --output-template-file packaged.yaml \
-    --s3-bucket REPLACE_THIS_WITH_YOUR_S3_BUCKET_NAME
+
+
+### Deploy to production
+
+
+
+
+## Managing go modules for dependencies
+See: https://horizoon.jp/post/2019/04/18/contributing_with_gomodules/ (only Japanese)
+
+### Check available versions
+
+```sh
+# for aws-lambda-go
+$ make chk-versions-aws-lambda-go
+:
+v1.13.0
+v1.13.1
+v1.13.2
+
+# for aws-sdk-go-v2
+$ make chk-versions-aws-sdk-go-v2
+:
+v0.13.0
+v0.14.0
+v2.0.0-preview.1+incompatible
+v2.0.0-preview.2+incompatible
+v2.0.0-preview.3+incompatible
+v2.0.0-preview.4+incompatible
 ```
 
-Next, the following command will create a Cloudformation Stack and deploy your SAM resources.
+### Update version
 
-```bash
-sam deploy \
-    --template-file packaged.yaml \
-    --stack-name misc-functions-http-go1 \
-    --capabilities CAPABILITY_IAM
+Assign target version using module-query
+
+```sh
+# for aws-lambda-go
+$ make update-aws-lambda-go
+Input Module Query(e.g. "<v1.20")?: <v1.14
+
+query=<v1.14
+go: downloading github.com/aws/aws-lambda-go v1.13.2
+go: extracting github.com/aws/aws-lambda-go v1.13.2
+
+
+# for aws-sdk-go-v2
+$ make update-aws-sdk-go-v2
+Input Module Query(e.g. "<v1.20")?: <v0.15
+
+query=<v0.15
+go: downloading github.com/aws/aws-sdk-go-v2 v0.14.0
+go: extracting github.com/aws/aws-sdk-go-v2 v0.14.0
 ```
 
-> **See [Serverless Application Model (SAM) HOWTO Guide](https://github.com/awslabs/serverless-application-model/blob/master/HOWTO.md) for more details in how to get started.**
 
-After deployment is complete you can run the following command to retrieve the API Gateway Endpoint URL:
 
-```bash
-aws cloudformation describe-stacks \
-    --stack-name misc-functions-http-go1 \
-    --query 'Stacks[].Outputs'
-``` 
-
-### Testing
-
-We use `testing` package that is built-in in Golang and you can simply run the following command to run our tests:
-
-```shell
-go test -v ./miscfunc/
-```
-# Appendix
-
-### Golang installation
-
-Please ensure Go 1.x (where 'x' is the latest version) is installed as per the instructions on the official golang website: https://golang.org/doc/install
-
-A quickstart way would be to use Homebrew, chocolatey or your linux package manager.
-
-#### Homebrew (Mac)
-
-Issue the following command from the terminal:
-
-```shell
-brew install golang
-```
-
-If it's already installed, run the following command to ensure it's the latest version:
-
-```shell
-brew update
-brew upgrade golang
-```
-
-#### Chocolatey (Windows)
-
-Issue the following command from the powershell:
-
-```shell
-choco install golang
-```
-
-If it's already installed, run the following command to ensure it's the latest version:
-
-```shell
-choco upgrade golang
-```
-## AWS CLI commands
-
-AWS CLI commands to package, deploy and describe outputs defined within the cloudformation stack:
-
-```bash
-sam package \
-    --template-file template.yaml \
-    --output-template-file packaged.yaml \
-    --s3-bucket REPLACE_THIS_WITH_YOUR_S3_BUCKET_NAME
-
-sam deploy \
-    --template-file packaged.yaml \
-    --stack-name misc-functions-http-go1 \
-    --capabilities CAPABILITY_IAM \
-    --parameter-overrides MyParameterSample=MySampleValue
-
-aws cloudformation describe-stacks \
-    --stack-name misc-functions-http-go1 --query 'Stacks[].Outputs'
-```
-
-## Bringing to the next level
-
-Here are a few ideas that you can use to get more acquainted as to how this overall process works:
-
-* Create an additional API resource (e.g. /hello/{proxy+}) and return the name requested through this new path
-* Update unit test to capture that
-* Package & Deploy
-
-Next, you can use the following resources to know more about beyond hello world samples and how others structure their Serverless applications:
-
-* [AWS Serverless Application Repository](https://aws.amazon.com/serverless/serverlessrepo/)
->>>>>>> WIP: first setup

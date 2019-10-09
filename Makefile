@@ -8,21 +8,27 @@ PKG_AWS_SDK_GO_V2 := github.com/aws/aws-sdk-go-v2
 
 MAIN_GO := ./$(CODE)/main.go
 CLIENT_GO := ./$(CODE)/client.go
-EXE := ./$(CODE)/$(CODE)
+BIN := ./$(CODE)/$(CODE)
+
 LOCAL_ENVS := ./localenvs.json
 LOCAL_EVENT := ./.event.json
 API_PORT := 3999
+
 DOCKER_LOCAL_DYNAMO_NAME := localdynamo
 DOCKER_LOCAL_DYNAMO_NETWORK := sam-dynamo-network
 TESTDATA_CREATE_TABLE := testdata/skel-workstatus-create-table.json
 TESTDATA_DATA := testdata/data.json
+LOCAL_WORKSTATUS_TABLE_NAME := localtable
+
 TOOL_DIR := bin
 PKG_DLV := github.com/go-delve/delve/cmd/dlv
 DLV := $(TOOL_DIR)/dlv
 DEBUG_PORT := 5986
+
 TEMPLATE := ./template.yaml
 OUTPUT_TEMPLATE := ./serverless-output.yaml
 LOCAL_TEMPLATE := ./template.local.yaml
+
 S3_BUCKET := jpshadowapps-lambdas
 S3_PREFIX := $(PROJECT)
 REGION := ap-northeast-1
@@ -32,17 +38,17 @@ TARGET_PKGS = $(shell go list ./... | \grep -v 'vendor')
 
 .DEFAULT_GOAL := build
 
-.PHONY: deps
+.PHONY: setup-deps
 setup-deps:
 	@go get github.com/aws/aws-lambda-go/...@latest
 
 .PHONY: build
 build:
-	@GOOS=linux GOARCH=amd64 go build -o $(EXE) $(MAIN_GO)
+	@GOOS=linux GOARCH=amd64 go build -o $(BIN) $(MAIN_GO)
 
 .PHONY: clean
 clean:
-	@rm -f $(EXE)
+	@rm -f $(BIN)
 
 .PHONY: rebuild
 rebuild: clean build
@@ -66,14 +72,7 @@ api: build cp-tmpl-local
 api-with-localdynamo: build cp-tmpl-local
 	@sam local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT) --docker-network $(DOCKER_LOCAL_DYNAMO_NETWORK)
 
-api-samdev: build cp-tmpl-local
-	@samdev local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT)
-
-# Note: must execute run-local-dynamo target before start-api
-api-samdev-with-localdynamo: build cp-tmpl-local
-	@samdev local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT) --docker-network $(DOCKER_LOCAL_DYNAMO_NETWORK)
-
-curl-get:
+curl-get-hello:
 	@curl -XGET http://127.0.0.1:$(API_PORT)$(API_PATH)
 
 curl-get-workstatus-desc:
@@ -85,24 +84,30 @@ curl-post-workstatus:
 setup-local-event:
 	@sam local generate-event apigateway aws-proxy > $(LOCAL_EVENT)
 
+api-samdev: build cp-tmpl-local
+	@samdev local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT)
+
+# Note: must execute run-local-dynamo target before start-api
+api-samdev-with-localdynamo: build cp-tmpl-local
+	@samdev local start-api -n $(LOCAL_ENVS) -t $(LOCAL_TEMPLATE) -p $(API_PORT) --docker-network $(DOCKER_LOCAL_DYNAMO_NETWORK)
+
 ###
 # for local DynamoDB
 ###
-
 # See:
 # - https://docs.aws.amazon.com/ja_jp/amazondynamodb/latest/developerguide/DynamoDBLocal.html
 # - https://github.com/aws-samples/aws-sam-java-rest
+
+setup-dynamo-docker: _pull-dynamo _create-docker-network-for-dynamo
+
+setup-dynamo-workstatus-table-skelton:
+	@aws dynamodb create-table --generate-cli-skeleton > $(TESTDATA_CREATE_TABLE)
 
 _pull-dynamo:
 	@docker pull amazon/dynamodb-local
 
 _create-docker-network-for-dynamo:
 	@docker network create $(DOCKER_LOCAL_DYNAMO_NETWORK)
-
-setup-dynamo-docker: _pull-dynamo _create-docker-network-for-dynamo
-
-setup-dynamo-workstatus-table-skelton:
-	@aws dynamodb create-table --generate-cli-skeleton > $(TESTDATA_CREATE_TABLE)
 
 up-dynamo: _run-dynamo _create-workstatus-table
 
@@ -115,18 +120,17 @@ _create-workstatus-table:
 down-dynamo:
 	@docker stop $(DOCKER_LOCAL_DYNAMO_NAME)
 
-delete-workstatus-table:
-	@aws dynamodb delete-table --table-name localtable --endpoint-url http://localhost:8000
-
-scan-table:
-	@aws dynamodb scan --table-name localtable --endpoint-url http://localhost:8000
-
 list-table:
 	@aws dynamodb list-tables --endpoint-url http://localhost:8000
 
 desc-table:
-	@aws dynamodb describe-table --table-name workstatus --endpoint-url http://localhost:8000
+	@aws dynamodb describe-table --table-name $(LOCAL_WORKSTATUS_TABLE_NAME) --endpoint-url http://localhost:8000
 
+scan-table:
+	@aws dynamodb scan --table-name $(LOCAL_WORKSTATUS_TABLE_NAME) --endpoint-url http://localhost:8000
+
+delete-workstatus-table:
+	@aws dynamodb delete-table --table-name $(LOCAL_WORKSTATUS_TABLE_NAME) --endpoint-url http://localhost:8000
 
 ###
 # for local debug
@@ -135,7 +139,7 @@ build-dlv:
 	@GOOS=linux GOARCH=amd64 go build -o $(DLV) $(PKG_DLV)
 
 debug-build:
-	@GOOS=linux GOARCH=amd64 go build -o $(EXE) -gcflags='-N -l' $(MAIN_GO)
+	@GOOS=linux GOARCH=amd64 go build -o $(BIN) -gcflags='-N -l' $(MAIN_GO)
 
 # See: https://github.com/awslabs/aws-sam-cli/issues/1067#issuecomment-489406846
 # 最新のsam＆delve＆lambciの組み合わせだと動かない
@@ -211,10 +215,10 @@ vendor:
 	@GO111MODULE=on go mod vendor -v
 
 vendor-build:
-	@GOOS=linux GOARCH=amd64 go build -o $(EXE) -mod vendor $(MAIN_GO)
+	@GOOS=linux GOARCH=amd64 go build -o $(BIN) -mod vendor $(MAIN_GO)
 
 vendor-debug-build:
-	@GOOS=linux GOARCH=amd64 go build -gcflags='-N -l' -o $(EXE) -mod vendor $(MAIN_GO)
+	@GOOS=linux GOARCH=amd64 go build -gcflags='-N -l' -o $(BIN) -mod vendor $(MAIN_GO)
 
 chk_versions = go list -u -m -versions $1 | tr ' ' '\n'
 
@@ -223,6 +227,16 @@ chk-versions-aws-lambda-go:
 
 chk-versions-aws-sdk-go-v2:
 	@$(call chk_versions,$(PKG_AWS_SDK_GO_V2))
+
+update-pkg = echo query="$2"; GO111MODULE=on go get $1@'$2'
+update-pkg-manualy = read -p 'Input Module Query(e.g. "<v1.20")?: ' query; echo query=$$query; GO111MODULE=on go get $1@''$$query''
+
+#@read -p 'Input Module Query(e.g. "<v1.20")?: ' query; echo query=$$query; GO111MODULE=on go get $(PKG_CHROMEDP)@''$$query''
+update-aws-lambda-go:
+	@$(call update-pkg-manualy,$(PKG_AWS_LAMBDA_GO))
+
+update-aws-sdk-go-v2:
+	@$(call update-pkg-manualy,$(PKG_AWS_SDK_GO_V2))
 
 ###
 # for add new feature
