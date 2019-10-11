@@ -121,13 +121,15 @@ $ make validate
 /Users/xxx/misc-functions-http-go1/template.yaml is a valid SAM Template
 ```
 
-### Deploy to NOT production
-
-
-
 ### Deploy to production
 
+1. Create pull request and review
+1. Merge pull request
+1. __Run auto deploy by Travis CI after merge pull request__
 
+
+### Deploy to NOT production
+TODO
 
 
 ## Managing go modules for dependencies
